@@ -584,6 +584,7 @@ See https://kubernetes.io/docs/reference/using-api/server-side-apply/#conflicts`
 
 		if o.DryRunStrategy != cmdutil.DryRunClient {
 			// Then create the resource and skip the three-way merge
+			klog.Info("[CONTINUUM] Have sent JSON request to server")
 			obj, err := helper.Create(info.Namespace, true, info.Object)
 			if err != nil {
 				return cmdutil.AddSourceToErr("creating", info.Source, err)
