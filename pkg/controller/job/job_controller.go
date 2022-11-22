@@ -186,6 +186,7 @@ func (jm *Controller) Run(ctx context.Context, workers int) {
 	defer utilruntime.HandleCrash()
 
 	// Start events processing pipeline.
+	klog.Info("[CONTINUUM] Print job event")
 	jm.broadcaster.StartStructuredLogging(0)
 	jm.broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: jm.kubeClient.CoreV1().Events("")})
 	defer jm.broadcaster.Shutdown()

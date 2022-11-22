@@ -26,9 +26,12 @@ import (
 	"k8s.io/controller-manager/controller"
 	"k8s.io/kubernetes/pkg/controller/cronjob"
 	"k8s.io/kubernetes/pkg/controller/job"
+
+	"k8s.io/klog/v2"
 )
 
 func startJobController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] Start job controller")
 	go job.NewController(
 		controllerContext.InformerFactory.Core().V1().Pods(),
 		controllerContext.InformerFactory.Batch().V1().Jobs(),

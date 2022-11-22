@@ -215,6 +215,7 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 
 	saTokenControllerInitFunc := serviceAccountTokenControllerStarter{rootClientBuilder: rootClientBuilder}.startServiceAccountTokenController
 
+	klog.Info("[CONTINUUM] Load map of controllers")
 	run := func(ctx context.Context, startSATokenController InitFunc, initializersFunc ControllerInitializersFunc) {
 		controllerContext, err := CreateControllerContext(c, rootClientBuilder, clientBuilder, ctx.Done())
 		if err != nil {
@@ -235,6 +236,7 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 	// No leader election, run directly
 	if !c.ComponentConfig.Generic.LeaderElection.LeaderElect {
 		ctx, _ := wait.ContextForChannel(stopCh)
+		klog.Info("[CONTINUUM] Load the list of controllers")
 		run(ctx, saTokenControllerInitFunc, NewControllerInitializers)
 		return nil
 	}
@@ -274,6 +276,7 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 		c.ComponentConfig.Generic.LeaderElection.ResourceName,
 		leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(ctx context.Context) {
+				klog.Info("[CONTINUUM] Load the list of controllers")
 				initializersFunc := NewControllerInitializers
 				if leaderMigrator != nil {
 					// If leader migration is enabled, we should start only non-migrated controllers
@@ -388,6 +391,7 @@ var _ ControllerInitializersFunc = NewControllerInitializers
 
 // KnownControllers returns all known controllers's name
 func KnownControllers() []string {
+	klog.Info("[CONTINUUM] Load the list of controllers")
 	ret := sets.StringKeySet(NewControllerInitializers(IncludeCloudLoops))
 
 	// add "special" controllers that aren't initialized normally.  These controllers cannot be initialized
@@ -731,8 +735,10 @@ func leaderElectAndRun(c *config.CompletedConfig, lockIdentity string, electionC
 //
 //	with expected as the result after filtering through filterFunc.
 func createInitializersFunc(filterFunc leadermigration.FilterFunc, expected leadermigration.FilterResult) ControllerInitializersFunc {
+	klog.Info("[CONTINUUM] Load map of controllers")
 	return func(loopMode ControllerLoopMode) map[string]InitFunc {
 		initializers := make(map[string]InitFunc)
+		klog.Info("[CONTINUUM] Load the list of controllers")
 		for name, initializer := range NewControllerInitializers(loopMode) {
 			if filterFunc(name) == expected {
 				initializers[name] = initializer
