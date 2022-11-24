@@ -100,6 +100,7 @@ type NoExecuteTaintManager struct {
 }
 
 func deletePodHandler(c clientset.Interface, emitEventFunc func(types.NamespacedName)) func(ctx context.Context, args *WorkArgs) error {
+	klog.Info("[CONTINUUM] 0243")
 	return func(ctx context.Context, args *WorkArgs) error {
 		ns := args.NamespacedName.Namespace
 		name := args.NamespacedName.Name
@@ -120,6 +121,7 @@ func deletePodHandler(c clientset.Interface, emitEventFunc func(types.Namespaced
 }
 
 func addConditionAndDeletePod(ctx context.Context, c clientset.Interface, name, ns string) (err error) {
+	klog.Info("[CONTINUUM] 0244")
 	if feature.DefaultFeatureGate.Enabled(features.PodDisruptionConditions) {
 		pod, err := c.CoreV1().Pods(ns).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
@@ -141,6 +143,7 @@ func addConditionAndDeletePod(ctx context.Context, c clientset.Interface, name, 
 }
 
 func getNoExecuteTaints(taints []v1.Taint) []v1.Taint {
+	klog.Info("[CONTINUUM] 0245")
 	result := []v1.Taint{}
 	for i := range taints {
 		if taints[i].Effect == v1.TaintEffectNoExecute {
@@ -152,6 +155,7 @@ func getNoExecuteTaints(taints []v1.Taint) []v1.Taint {
 
 // getMinTolerationTime returns minimal toleration time from the given slice, or -1 if it's infinite.
 func getMinTolerationTime(tolerations []v1.Toleration) time.Duration {
+	klog.Info("[CONTINUUM] 0246")
 	minTolerationTime := int64(math.MaxInt64)
 	if len(tolerations) == 0 {
 		return 0
@@ -177,6 +181,7 @@ func getMinTolerationTime(tolerations []v1.Toleration) time.Duration {
 // NewNoExecuteTaintManager creates a new NoExecuteTaintManager that will use passed clientset to
 // communicate with the API server.
 func NewNoExecuteTaintManager(ctx context.Context, c clientset.Interface, podLister corelisters.PodLister, nodeLister corelisters.NodeLister, getPodsAssignedToNode GetPodsByNodeNameFunc) *NoExecuteTaintManager {
+	klog.Info("[CONTINUUM] 0247")
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "taint-controller"})
 
@@ -199,6 +204,7 @@ func NewNoExecuteTaintManager(ctx context.Context, c clientset.Interface, podLis
 
 // Run starts NoExecuteTaintManager which will run in loop until `stopCh` is closed.
 func (tc *NoExecuteTaintManager) Run(ctx context.Context) {
+	klog.Info("[CONTINUUM] 0248")
 	defer utilruntime.HandleCrash()
 
 	klog.InfoS("Starting NoExecuteTaintManager")
@@ -272,6 +278,7 @@ func (tc *NoExecuteTaintManager) Run(ctx context.Context) {
 }
 
 func (tc *NoExecuteTaintManager) worker(ctx context.Context, worker int, done func(), stopCh <-chan struct{}) {
+	klog.Info("[CONTINUUM] 0249")
 	defer done()
 
 	// When processing events we want to prioritize Node updates over Pod updates,
@@ -306,6 +313,7 @@ func (tc *NoExecuteTaintManager) worker(ctx context.Context, worker int, done fu
 
 // PodUpdated is used to notify NoExecuteTaintManager about Pod changes.
 func (tc *NoExecuteTaintManager) PodUpdated(oldPod *v1.Pod, newPod *v1.Pod) {
+	klog.Info("[CONTINUUM] 0250")
 	podName := ""
 	podNamespace := ""
 	nodeName := ""
@@ -338,6 +346,7 @@ func (tc *NoExecuteTaintManager) PodUpdated(oldPod *v1.Pod, newPod *v1.Pod) {
 
 // NodeUpdated is used to notify NoExecuteTaintManager about Node changes.
 func (tc *NoExecuteTaintManager) NodeUpdated(oldNode *v1.Node, newNode *v1.Node) {
+	klog.Info("[CONTINUUM] 0251")
 	nodeName := ""
 	oldTaints := []v1.Taint{}
 	if oldNode != nil {
@@ -362,6 +371,7 @@ func (tc *NoExecuteTaintManager) NodeUpdated(oldNode *v1.Node, newNode *v1.Node)
 }
 
 func (tc *NoExecuteTaintManager) cancelWorkWithEvent(nsName types.NamespacedName) {
+	klog.Info("[CONTINUUM] 0252")
 	if tc.taintEvictionQueue.CancelWork(nsName.String()) {
 		tc.emitCancelPodDeletionEvent(nsName)
 	}
@@ -375,6 +385,7 @@ func (tc *NoExecuteTaintManager) processPodOnNode(
 	taints []v1.Taint,
 	now time.Time,
 ) {
+	klog.Info("[CONTINUUM] 0253")
 	if len(taints) == 0 {
 		tc.cancelWorkWithEvent(podNamespacedName)
 	}
@@ -408,6 +419,7 @@ func (tc *NoExecuteTaintManager) processPodOnNode(
 }
 
 func (tc *NoExecuteTaintManager) handlePodUpdate(ctx context.Context, podUpdate podUpdateItem) {
+	klog.Info("[CONTINUUM] 0254")
 	pod, err := tc.podLister.Pods(podUpdate.podNamespace).Get(podUpdate.podName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -448,6 +460,7 @@ func (tc *NoExecuteTaintManager) handlePodUpdate(ctx context.Context, podUpdate 
 }
 
 func (tc *NoExecuteTaintManager) handleNodeUpdate(ctx context.Context, nodeUpdate nodeUpdateItem) {
+	klog.Info("[CONTINUUM] 0255")
 	node, err := tc.nodeLister.Get(nodeUpdate.nodeName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -504,6 +517,7 @@ func (tc *NoExecuteTaintManager) handleNodeUpdate(ctx context.Context, nodeUpdat
 }
 
 func (tc *NoExecuteTaintManager) emitPodDeletionEvent(nsName types.NamespacedName) {
+	klog.Info("[CONTINUUM] 0256")
 	if tc.recorder == nil {
 		return
 	}
@@ -516,6 +530,7 @@ func (tc *NoExecuteTaintManager) emitPodDeletionEvent(nsName types.NamespacedNam
 }
 
 func (tc *NoExecuteTaintManager) emitCancelPodDeletionEvent(nsName types.NamespacedName) {
+	klog.Info("[CONTINUUM] 0257")
 	if tc.recorder == nil {
 		return
 	}

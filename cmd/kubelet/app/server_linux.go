@@ -24,6 +24,7 @@ import (
 )
 
 func watchForLockfileContention(path string, done chan struct{}) error {
+	klog.Info("[CONTINUUM] 0109")
 	watcher, err := inotify.NewWatcher()
 	if err != nil {
 		klog.ErrorS(err, "Unable to create watcher for lockfile")

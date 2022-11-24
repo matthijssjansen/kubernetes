@@ -174,6 +174,8 @@ func ResyncPeriod(c *config.CompletedConfig) func() time.Duration {
 
 // Run runs the KubeControllerManagerOptions.
 func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
+	klog.Info("[CONTINUUM] 0028")
+
 	// To help debugging, immediately log version
 	klog.Infof("Version: %+v", version.Get())
 
@@ -215,7 +217,7 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 
 	saTokenControllerInitFunc := serviceAccountTokenControllerStarter{rootClientBuilder: rootClientBuilder}.startServiceAccountTokenController
 
-	klog.Info("[CONTINUUM] Load map of controllers")
+	klog.Info("[CONTINUUM] 0029")
 	run := func(ctx context.Context, startSATokenController InitFunc, initializersFunc ControllerInitializersFunc) {
 		controllerContext, err := CreateControllerContext(c, rootClientBuilder, clientBuilder, ctx.Done())
 		if err != nil {
@@ -234,9 +236,9 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 	}
 
 	// No leader election, run directly
+	klog.Info("[CONTINUUM] 0030")
 	if !c.ComponentConfig.Generic.LeaderElection.LeaderElect {
 		ctx, _ := wait.ContextForChannel(stopCh)
-		klog.Info("[CONTINUUM] Load the list of controllers")
 		run(ctx, saTokenControllerInitFunc, NewControllerInitializers)
 		return nil
 	}
@@ -271,12 +273,13 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 	}
 
 	// Start the main lock
+	klog.Info("[CONTINUUM] 0030")
 	go leaderElectAndRun(c, id, electionChecker,
 		c.ComponentConfig.Generic.LeaderElection.ResourceLock,
 		c.ComponentConfig.Generic.LeaderElection.ResourceName,
 		leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(ctx context.Context) {
-				klog.Info("[CONTINUUM] Load the list of controllers")
+				klog.Info("[CONTINUUM] 0031")
 				initializersFunc := NewControllerInitializers
 				if leaderMigrator != nil {
 					// If leader migration is enabled, we should start only non-migrated controllers
@@ -293,6 +296,7 @@ func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
 		})
 
 	// If Leader Migration is enabled, proceed to attempt the migration lock.
+	klog.Info("[CONTINUUM] 0032")
 	if leaderMigrator != nil {
 		// Wait for Service Account Token Controller to start before acquiring the migration lock.
 		// At this point, the main lock must have already been acquired, or the KCM process already exited.
@@ -391,7 +395,7 @@ var _ ControllerInitializersFunc = NewControllerInitializers
 
 // KnownControllers returns all known controllers's name
 func KnownControllers() []string {
-	klog.Info("[CONTINUUM] Load the list of controllers")
+	klog.Info("[CONTINUUM] 0033")
 	ret := sets.StringKeySet(NewControllerInitializers(IncludeCloudLoops))
 
 	// add "special" controllers that aren't initialized normally.  These controllers cannot be initialized
@@ -472,6 +476,7 @@ func NewControllerInitializers(loopMode ControllerLoopMode) map[string]InitFunc 
 // users don't have to restart their controller manager if they change the apiserver.
 // Until we get there, the structure here needs to be exposed for the construction of a proper ControllerContext.
 func GetAvailableResources(clientBuilder clientbuilder.ControllerClientBuilder) (map[schema.GroupVersionResource]bool, error) {
+	klog.Info("[CONTINUUM] 0034")
 	client := clientBuilder.ClientOrDie("controller-discovery")
 	discoveryClient := client.Discovery()
 	_, resourceMap, err := discoveryClient.ServerGroupsAndResources()
@@ -500,6 +505,7 @@ func GetAvailableResources(clientBuilder clientbuilder.ControllerClientBuilder) 
 // controllers such as the cloud provider and clientBuilder. rootClientBuilder is only used for
 // the shared-informers client and token controller.
 func CreateControllerContext(s *config.CompletedConfig, rootClientBuilder, clientBuilder clientbuilder.ControllerClientBuilder, stop <-chan struct{}) (ControllerContext, error) {
+	klog.Info("[CONTINUUM] 0035")
 	versionedClient := rootClientBuilder.ClientOrDie("shared-informers")
 	sharedInformers := informers.NewSharedInformerFactory(versionedClient, ResyncPeriod(s)())
 
@@ -551,6 +557,7 @@ func CreateControllerContext(s *config.CompletedConfig, rootClientBuilder, clien
 // StartControllers starts a set of controllers with a specified ControllerContext
 func StartControllers(ctx context.Context, controllerCtx ControllerContext, startSATokenController InitFunc, controllers map[string]InitFunc,
 	unsecuredMux *mux.PathRecorderMux, healthzHandler *controllerhealthz.MutableHealthzHandler) error {
+	klog.Info("[CONTINUUM] 0036")
 	// Always start the SA token controller first using a full-power client, since it needs to mint tokens for the rest
 	// If this fails, just return here and fail since other controllers won't be able to get credentials.
 	if startSATokenController != nil {
@@ -620,6 +627,7 @@ type serviceAccountTokenControllerStarter struct {
 }
 
 func (c serviceAccountTokenControllerStarter) startServiceAccountTokenController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0037")
 	if !controllerContext.IsControllerEnabled(saTokenControllerName) {
 		klog.Warningf("%q is disabled", saTokenControllerName)
 		return nil, false, nil
@@ -682,6 +690,7 @@ func readCA(file string) ([]byte, error) {
 
 // createClientBuilders creates clientBuilder and rootClientBuilder from the given configuration
 func createClientBuilders(c *config.CompletedConfig) (clientBuilder clientbuilder.ControllerClientBuilder, rootClientBuilder clientbuilder.ControllerClientBuilder) {
+	klog.Info("[CONTINUUM] 0038")
 	rootClientBuilder = clientbuilder.SimpleControllerClientBuilder{
 		ClientConfig: c.Kubeconfig,
 	}
@@ -735,10 +744,9 @@ func leaderElectAndRun(c *config.CompletedConfig, lockIdentity string, electionC
 //
 //	with expected as the result after filtering through filterFunc.
 func createInitializersFunc(filterFunc leadermigration.FilterFunc, expected leadermigration.FilterResult) ControllerInitializersFunc {
-	klog.Info("[CONTINUUM] Load map of controllers")
+	klog.Info("[CONTINUUM] 0039")
 	return func(loopMode ControllerLoopMode) map[string]InitFunc {
 		initializers := make(map[string]InitFunc)
-		klog.Info("[CONTINUUM] Load the list of controllers")
 		for name, initializer := range NewControllerInitializers(loopMode) {
 			if filterFunc(name) == expected {
 				initializers[name] = initializer

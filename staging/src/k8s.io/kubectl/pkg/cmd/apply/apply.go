@@ -425,6 +425,7 @@ func (o *ApplyOptions) SetObjects(infos []*resource.Info) {
 
 // Run executes the `apply` command.
 func (o *ApplyOptions) Run() error {
+	klog.Info("[CONTINUUM] 0005")
 	if o.PreProcessorFn != nil {
 		klog.V(4).Infof("Running apply pre-processor function")
 		if err := o.PreProcessorFn(); err != nil {
@@ -473,6 +474,7 @@ func (o *ApplyOptions) Run() error {
 }
 
 func (o *ApplyOptions) applyOneObject(info *resource.Info) error {
+	klog.Info("[CONTINUUM] 0004")
 	o.MarkNamespaceVisited(info)
 
 	if err := o.Recorder.Record(info.Object); err != nil {
@@ -584,7 +586,7 @@ See https://kubernetes.io/docs/reference/using-api/server-side-apply/#conflicts`
 
 		if o.DryRunStrategy != cmdutil.DryRunClient {
 			// Then create the resource and skip the three-way merge
-			klog.Info("[CONTINUUM] Have sent JSON request to server")
+			klog.Info("[CONTINUUM] 0003")
 			obj, err := helper.Create(info.Namespace, true, info.Object)
 			if err != nil {
 				return cmdutil.AddSourceToErr("creating", info.Source, err)

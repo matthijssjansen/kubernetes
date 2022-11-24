@@ -61,6 +61,7 @@ func createAggregatorConfig(
 	proxyTransport *http.Transport,
 	pluginInitializers []admission.PluginInitializer,
 ) (*aggregatorapiserver.Config, error) {
+	klog.Info("[CONTINUUM] 0041")
 	// make a shallow copy to let us twiddle a few things
 	// most of the config actually remains the same.  We only need to mess with a couple items related to the particulars of the aggregator
 	genericConfig := kubeAPIServerConfig
@@ -126,6 +127,7 @@ func createAggregatorConfig(
 }
 
 func createAggregatorServer(aggregatorConfig *aggregatorapiserver.Config, delegateAPIServer genericapiserver.DelegationTarget, apiExtensionInformers apiextensionsinformers.SharedInformerFactory) (*aggregatorapiserver.APIAggregator, error) {
+	klog.Info("[CONTINUUM] 0042")
 	aggregatorServer, err := aggregatorConfig.Complete().NewWithDelegate(delegateAPIServer)
 	if err != nil {
 		return nil, err
@@ -174,6 +176,7 @@ func createAggregatorServer(aggregatorConfig *aggregatorapiserver.Config, delega
 }
 
 func makeAPIService(gv schema.GroupVersion) *v1.APIService {
+	klog.Info("[CONTINUUM] 0043")
 	apiServicePriority, ok := apiVersionPriorities[gv]
 	if !ok {
 		// if we aren't found, then we shouldn't register ourselves because it could result in a CRD group version
@@ -195,6 +198,7 @@ func makeAPIService(gv schema.GroupVersion) *v1.APIService {
 // makeAPIServiceAvailableHealthCheck returns a healthz check that returns healthy
 // once all of the specified services have been observed to be available at least once.
 func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIService, apiServiceInformer informers.APIServiceInformer) healthz.HealthChecker {
+	klog.Info("[CONTINUUM] 0044")
 	// Track the auto-registered API services that have not been observed to be available yet
 	pendingServiceNamesLock := &sync.RWMutex{}
 	pendingServiceNames := sets.NewString()
@@ -287,6 +291,7 @@ var apiVersionPriorities = map[schema.GroupVersion]priority{
 }
 
 func apiServicesToRegister(delegateAPIServer genericapiserver.DelegationTarget, registration autoregister.AutoAPIServiceRegistration) []*v1.APIService {
+	klog.Info("[CONTINUUM] 0045")
 	apiServices := []*v1.APIService{}
 
 	for _, curr := range delegateAPIServer.ListedPaths() {

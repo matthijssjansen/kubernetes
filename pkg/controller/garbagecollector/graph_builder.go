@@ -616,6 +616,7 @@ func identityFromEvent(event *event, accessor metav1.Object) objectReference {
 
 // Dequeueing an event from graphChanges, updating graph, populating dirty_queue.
 func (gb *GraphBuilder) processGraphChanges() bool {
+	klog.Info("[CONTINUUM] 0187")
 	item, quit := gb.graphChanges.Get()
 	if quit {
 		return false

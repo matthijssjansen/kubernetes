@@ -65,6 +65,7 @@ var clearNominatedNode = &framework.NominatingInfo{NominatingMode: framework.Mod
 
 // scheduleOne does the entire scheduling workflow for a single pod. It is serialized on the scheduling algorithm's host fitting.
 func (sched *Scheduler) scheduleOne(ctx context.Context) {
+	klog.Info("[CONTINUUM] 0126")
 	podInfo := sched.NextPod()
 	// pod could be nil when schedulerQueue is closed
 	if podInfo == nil || podInfo.Pod == nil {
@@ -281,6 +282,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 }
 
 func (sched *Scheduler) frameworkForPod(pod *v1.Pod) (framework.Framework, error) {
+	klog.Info("[CONTINUUM] 0130")
 	fwk, ok := sched.Profiles[pod.Spec.SchedulerName]
 	if !ok {
 		return nil, fmt.Errorf("profile not found for scheduler name %q", pod.Spec.SchedulerName)
@@ -290,6 +292,7 @@ func (sched *Scheduler) frameworkForPod(pod *v1.Pod) (framework.Framework, error
 
 // skipPodSchedule returns true if we could skip scheduling the pod for specified cases.
 func (sched *Scheduler) skipPodSchedule(fwk framework.Framework, pod *v1.Pod) bool {
+	klog.Info("[CONTINUUM] 0131")
 	// Case 1: pod is being deleted.
 	if pod.DeletionTimestamp != nil {
 		fwk.EventRecorder().Eventf(pod, nil, v1.EventTypeWarning, "FailedScheduling", "Scheduling", "skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
@@ -312,6 +315,7 @@ func (sched *Scheduler) skipPodSchedule(fwk framework.Framework, pod *v1.Pod) bo
 // If it succeeds, it will return the name of the node.
 // If it fails, it will return a FitError with reasons.
 func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework, state *framework.CycleState, pod *v1.Pod) (result ScheduleResult, err error) {
+	klog.Info("[CONTINUUM] 0132")
 	trace := utiltrace.New("Scheduling", utiltrace.Field{Key: "namespace", Value: pod.Namespace}, utiltrace.Field{Key: "name", Value: pod.Name})
 	defer trace.LogIfLong(100 * time.Millisecond)
 
@@ -365,6 +369,7 @@ func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework
 // Filters the nodes to find the ones that fit the pod based on the framework
 // filter plugins and filter extenders.
 func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.Framework, state *framework.CycleState, pod *v1.Pod) ([]*v1.Node, framework.Diagnosis, error) {
+	klog.Info("[CONTINUUM] 0133")
 	diagnosis := framework.Diagnosis{
 		NodeToStatusMap:      make(framework.NodeToStatusMap),
 		UnschedulablePlugins: sets.NewString(),
@@ -433,6 +438,7 @@ func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.F
 }
 
 func (sched *Scheduler) evaluateNominatedNode(ctx context.Context, pod *v1.Pod, fwk framework.Framework, state *framework.CycleState, diagnosis framework.Diagnosis) ([]*v1.Node, error) {
+	klog.Info("[CONTINUUM] 0134")
 	nnn := pod.Status.NominatedNodeName
 	nodeInfo, err := sched.nodeInfoSnapshot.Get(nnn)
 	if err != nil {
@@ -460,6 +466,7 @@ func (sched *Scheduler) findNodesThatPassFilters(
 	pod *v1.Pod,
 	diagnosis framework.Diagnosis,
 	nodes []*framework.NodeInfo) ([]*v1.Node, error) {
+	klog.Info("[CONTINUUM] 0135")
 	numAllNodes := len(nodes)
 	numNodesToFind := sched.numFeasibleNodesToFind(int32(numAllNodes))
 
@@ -526,6 +533,7 @@ func (sched *Scheduler) findNodesThatPassFilters(
 // numFeasibleNodesToFind returns the number of feasible nodes that once found, the scheduler stops
 // its search for more feasible nodes.
 func (sched *Scheduler) numFeasibleNodesToFind(numAllNodes int32) (numNodes int32) {
+	klog.Info("[CONTINUUM] 0136")
 	if numAllNodes < minFeasibleNodesToFind || sched.percentageOfNodesToScore >= 100 {
 		return numAllNodes
 	}
@@ -548,6 +556,7 @@ func (sched *Scheduler) numFeasibleNodesToFind(numAllNodes int32) (numNodes int3
 }
 
 func findNodesThatPassExtenders(extenders []framework.Extender, pod *v1.Pod, feasibleNodes []*v1.Node, statuses framework.NodeToStatusMap) ([]*v1.Node, error) {
+	klog.Info("[CONTINUUM] 0137")
 	// Extenders are called sequentially.
 	// Nodes in original feasibleNodes can be excluded in one extender, and pass on to the next
 	// extender in a decreasing manner.
@@ -613,6 +622,7 @@ func prioritizeNodes(
 	pod *v1.Pod,
 	nodes []*v1.Node,
 ) (framework.NodeScoreList, error) {
+	klog.Info("[CONTINUUM] 0138")
 	// If no priority configs are provided, then all nodes will have a score of one.
 	// This is required to generate the priority list in the required format
 	if len(extenders) == 0 && !fwk.HasScorePlugins() {
@@ -710,6 +720,7 @@ func prioritizeNodes(
 // selectHost takes a prioritized list of nodes and then picks one
 // in a reservoir sampling manner from the nodes that had the highest score.
 func selectHost(nodeScoreList framework.NodeScoreList) (string, error) {
+	klog.Info("[CONTINUUM] 0139")
 	if len(nodeScoreList) == 0 {
 		return "", fmt.Errorf("empty priorityList")
 	}
@@ -735,6 +746,7 @@ func selectHost(nodeScoreList framework.NodeScoreList) (string, error) {
 // assume signals to the cache that a pod is already in the cache, so that binding can be asynchronous.
 // assume modifies `assumed`.
 func (sched *Scheduler) assume(assumed *v1.Pod, host string) error {
+	klog.Info("[CONTINUUM] 0140")
 	// Optimistically assume that the binding will succeed and send it to apiserver
 	// in the background.
 	// If the binding fails, scheduler will release resources allocated to assumed pod
@@ -757,6 +769,7 @@ func (sched *Scheduler) assume(assumed *v1.Pod, host string) error {
 // The precedence for binding is: (1) extenders and (2) framework plugins.
 // We expect this to run asynchronously, so we handle binding metrics internally.
 func (sched *Scheduler) bind(ctx context.Context, fwk framework.Framework, assumed *v1.Pod, targetNode string, state *framework.CycleState) (err error) {
+	klog.Info("[CONTINUUM] 0141")
 	defer func() {
 		sched.finishBinding(fwk, assumed, targetNode, err)
 	}()
@@ -777,6 +790,7 @@ func (sched *Scheduler) bind(ctx context.Context, fwk framework.Framework, assum
 
 // TODO(#87159): Move this to a Plugin.
 func (sched *Scheduler) extendersBinding(pod *v1.Pod, node string) (bool, error) {
+	klog.Info("[CONTINUUM] 0142")
 	for _, extender := range sched.Extenders {
 		if !extender.IsBinder() || !extender.IsInterested(pod) {
 			continue
@@ -790,6 +804,7 @@ func (sched *Scheduler) extendersBinding(pod *v1.Pod, node string) (bool, error)
 }
 
 func (sched *Scheduler) finishBinding(fwk framework.Framework, assumed *v1.Pod, targetNode string, err error) {
+	klog.Info("[CONTINUUM] 0152")
 	if finErr := sched.Cache.FinishBinding(assumed); finErr != nil {
 		klog.ErrorS(finErr, "Scheduler cache FinishBinding failed")
 	}
@@ -813,6 +828,7 @@ func getAttemptsLabel(p *framework.QueuedPodInfo) string {
 // handleSchedulingFailure records an event for the pod that indicates the
 // pod has failed to schedule. Also, update the pod condition and nominated node name if set.
 func (sched *Scheduler) handleSchedulingFailure(ctx context.Context, fwk framework.Framework, podInfo *framework.QueuedPodInfo, err error, reason string, nominatingInfo *framework.NominatingInfo) {
+	klog.Info("[CONTINUUM] 0128")
 	pod := podInfo.Pod
 	var errMsg string
 	if err != nil {
@@ -897,6 +913,7 @@ func truncateMessage(message string) string {
 }
 
 func updatePod(ctx context.Context, client clientset.Interface, pod *v1.Pod, condition *v1.PodCondition, nominatingInfo *framework.NominatingInfo) error {
+	klog.Info("[CONTINUUM] 0129")
 	klog.V(3).InfoS("Updating pod condition", "pod", klog.KObj(pod), "conditionType", condition.Type, "conditionStatus", condition.Status, "conditionReason", condition.Reason)
 	podStatusCopy := pod.Status.DeepCopy()
 	// NominatedNodeName is updated only if we are trying to set it, and the value is

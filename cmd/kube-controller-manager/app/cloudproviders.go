@@ -31,6 +31,7 @@ import (
 // that the cloud providers need as parameters, so we can control
 func createCloudProvider(cloudProvider string, externalCloudVolumePlugin string, cloudConfigFile string,
 	allowUntaggedCloud bool, sharedInformers informers.SharedInformerFactory) (cloudprovider.Interface, ControllerLoopMode, error) {
+	klog.Info("[CONTINUUM] 0080")
 	var cloud cloudprovider.Interface
 	var loopMode ControllerLoopMode
 	var err error

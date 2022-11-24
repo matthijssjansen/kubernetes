@@ -203,6 +203,7 @@ func (ev *Evaluator) Preempt(ctx context.Context, pod *v1.Pod, m framework.NodeT
 // FindCandidates calculates a slice of preemption candidates.
 // Each candidate is executable to make the given <pod> schedulable.
 func (ev *Evaluator) findCandidates(ctx context.Context, pod *v1.Pod, m framework.NodeToStatusMap) ([]Candidate, framework.NodeToStatusMap, error) {
+	klog.Info("[CONTINUUM] 0127")
 	allNodes, err := ev.Handler.SnapshotSharedLister().NodeInfos().List()
 	if err != nil {
 		return nil, nil, err

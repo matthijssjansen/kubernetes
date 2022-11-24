@@ -71,6 +71,7 @@ type Option func(runtime.Registry) error
 
 // NewSchedulerCommand creates a *cobra.Command object with default parameters and registryOptions
 func NewSchedulerCommand(registryOptions ...Option) *cobra.Command {
+	klog.Info("[CONTINUUM] 0094")
 	opts := options.NewOptions()
 
 	cmd := &cobra.Command{
@@ -116,6 +117,7 @@ for more information about scheduling and the kube-scheduler component.`,
 
 // runCommand runs the scheduler.
 func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Option) error {
+	klog.Info("[CONTINUUM] 0095")
 	verflag.PrintAndExitIfRequested()
 
 	// Activate logging as soon as possible, after that
@@ -144,6 +146,7 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
 
 // Run executes the scheduler based on the given configuration. It only returns on error or when context is done.
 func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *scheduler.Scheduler) error {
+	klog.Info("[CONTINUUM] 0096")
 	// To help debugging, immediately log version
 	klog.InfoS("Starting Kubernetes Scheduler", "version", version.Get())
 
@@ -240,6 +243,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 
 // buildHandlerChain wraps the given handler with the standard filters.
 func buildHandlerChain(handler http.Handler, authn authenticator.Request, authz authorizer.Authorizer) http.Handler {
+	klog.Info("[CONTINUUM] 0097")
 	requestInfoResolver := &apirequest.RequestInfoFactory{}
 	failedHandler := genericapifilters.Unauthorized(scheme.Codecs)
 
@@ -254,6 +258,7 @@ func buildHandlerChain(handler http.Handler, authn authenticator.Request, authz 
 }
 
 func installMetricHandler(pathRecorderMux *mux.PathRecorderMux, informers informers.SharedInformerFactory, isLeader func() bool) {
+	klog.Info("[CONTINUUM] 0098")
 	configz.InstallHandler(pathRecorderMux)
 	pathRecorderMux.Handle("/metrics", legacyregistry.HandlerWithReset())
 
@@ -269,6 +274,7 @@ func installMetricHandler(pathRecorderMux *mux.PathRecorderMux, informers inform
 // newHealthzAndMetricsHandler creates a healthz server from the config, and will also
 // embed the metrics handler.
 func newHealthzAndMetricsHandler(config *kubeschedulerconfig.KubeSchedulerConfiguration, informers informers.SharedInformerFactory, isLeader func() bool, checks ...healthz.HealthChecker) http.Handler {
+	klog.Info("[CONTINUUM] 0099")
 	pathRecorderMux := mux.NewPathRecorderMux("kube-scheduler")
 	healthz.InstallHandler(pathRecorderMux, checks...)
 	installMetricHandler(pathRecorderMux, informers, isLeader)
@@ -298,6 +304,7 @@ func WithPlugin(name string, factory runtime.PluginFactory) Option {
 
 // Setup creates a completed config and a scheduler based on the command args and options
 func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions ...Option) (*schedulerserverconfig.CompletedConfig, *scheduler.Scheduler, error) {
+	klog.Info("[CONTINUUM] 0100")
 	if cfg, err := latest.Default(); err != nil {
 		return nil, nil, err
 	} else {

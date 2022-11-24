@@ -94,7 +94,7 @@ var defaultConfigFlags = genericclioptions.NewConfigFlags(true).WithDeprecatedPa
 
 // NewDefaultKubectlCommand creates the `kubectl` command with default arguments
 func NewDefaultKubectlCommand() *cobra.Command {
-	klog.Info("[CONTINUUM] Starting Kubectl")
+	klog.Info("[CONTINUUM] 0006")
 	return NewDefaultKubectlCommandWithArgs(KubectlOptions{
 		PluginHandler: NewDefaultPluginHandler(plugin.ValidPluginFilenamePrefixes),
 		Arguments:     os.Args,

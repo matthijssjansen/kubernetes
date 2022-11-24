@@ -201,6 +201,7 @@ type priorityLevelState struct {
 
 // NewTestableController is extra flexible to facilitate testing
 func newTestableController(config TestableConfig) *configController {
+	klog.Info("[CONTINUUM] 0315")
 	cfgCtlr := &configController{
 		name:                   config.Name,
 		clock:                  config.Clock,
@@ -292,6 +293,7 @@ func newTestableController(config TestableConfig) *configController {
 }
 
 func (cfgCtlr *configController) Run(stopCh <-chan struct{}) error {
+	klog.Info("[CONTINUUM] 0316")
 	defer utilruntime.HandleCrash()
 
 	// Let the config worker stop when we are done
@@ -314,6 +316,7 @@ func (cfgCtlr *configController) Run(stopCh <-chan struct{}) error {
 // limit the number to one in order to obviate explicit
 // synchronization around access to `cfgCtlr.mostRecentUpdates`.
 func (cfgCtlr *configController) runWorker() {
+	klog.Info("[CONTINUUM] 0317")
 	for cfgCtlr.processNextWorkItem() {
 	}
 }
@@ -321,6 +324,7 @@ func (cfgCtlr *configController) runWorker() {
 // processNextWorkItem works on one entry from the work queue.
 // Only invoke this in the one and only worker goroutine.
 func (cfgCtlr *configController) processNextWorkItem() bool {
+	klog.Info("[CONTINUUM] 0318")
 	obj, shutdown := cfgCtlr.configQueue.Get()
 	if shutdown {
 		return false
@@ -348,6 +352,7 @@ func (cfgCtlr *configController) processNextWorkItem() bool {
 // local configController accordingly.
 // Only invoke this in the one and only worker goroutine
 func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) {
+	klog.Info("[CONTINUUM] 0319")
 	klog.V(5).Infof("%s syncOne at %s", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt))
 	all := labels.Everything()
 	newPLs, err := cfgCtlr.plLister.List(all)
@@ -402,6 +407,7 @@ type fsStatusUpdate struct {
 // cfgCtlr and writes its consequent new configState.
 // Only invoke this in the one and only worker goroutine
 func (cfgCtlr *configController) digestConfigObjects(newPLs []*flowcontrol.PriorityLevelConfiguration, newFSs []*flowcontrol.FlowSchema) (time.Duration, error) {
+	klog.Info("[CONTINUUM] 0320")
 	fsStatusUpdates := cfgCtlr.lockAndDigestConfigObjects(newPLs, newFSs)
 	var errs []error
 	currResult := updateAttempt{
@@ -449,6 +455,7 @@ func (cfgCtlr *configController) digestConfigObjects(newPLs []*flowcontrol.Prior
 
 // makeFlowSchemaConditionPatch takes in a condition and returns the patch status as a json.
 func makeFlowSchemaConditionPatch(condition flowcontrol.FlowSchemaCondition) ([]byte, error) {
+	klog.Info("[CONTINUUM] 0321")
 	o := struct {
 		Status flowcontrol.FlowSchemaStatus `json:"status"`
 	}{
@@ -464,6 +471,7 @@ func makeFlowSchemaConditionPatch(condition flowcontrol.FlowSchemaCondition) ([]
 // shouldDelayUpdate checks to see if a flowschema has been updated too often and returns true if a delay is needed.
 // Only invoke this in the one and only worker goroutine
 func (cfgCtlr *configController) shouldDelayUpdate(flowSchemaName string) bool {
+	klog.Info("[CONTINUUM] 0322")
 	numUpdatesInPastMinute := 0
 	oneMinuteAgo := cfgCtlr.clock.Now().Add(-1 * time.Minute)
 	for idx, update := range cfgCtlr.mostRecentUpdates {
@@ -486,10 +494,12 @@ func (cfgCtlr *configController) shouldDelayUpdate(flowSchemaName string) bool {
 // this is small and rate limited.
 // Only invoke this in the one and only worker goroutine
 func (cfgCtlr *configController) addUpdateResult(result updateAttempt) {
+	klog.Info("[CONTINUUM] 0323")
 	cfgCtlr.mostRecentUpdates = append([]updateAttempt{result}, cfgCtlr.mostRecentUpdates...)
 }
 
 func (cfgCtlr *configController) lockAndDigestConfigObjects(newPLs []*flowcontrol.PriorityLevelConfiguration, newFSs []*flowcontrol.FlowSchema) []fsStatusUpdate {
+	klog.Info("[CONTINUUM] 0324")
 	cfgCtlr.lock.Lock()
 	defer cfgCtlr.lock.Unlock()
 	meal := cfgMeal{
@@ -526,6 +536,7 @@ func (cfgCtlr *configController) lockAndDigestConfigObjects(newPLs []*flowcontro
 // Digest the new set of PriorityLevelConfiguration objects.
 // Pretend broken ones do not exist.
 func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfiguration) {
+	klog.Info("[CONTINUUM] 0325")
 	for _, pl := range newPLs {
 		state := meal.cfgCtlr.priorityLevelStates[pl.Name]
 		if state == nil {
@@ -560,6 +571,7 @@ func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfi
 // FlowSchema objects.  The given objects must all have distinct
 // names.
 func (meal *cfgMeal) digestFlowSchemasLocked(newFSs []*flowcontrol.FlowSchema) {
+	klog.Info("[CONTINUUM] 0326")
 	fsSeq := make(apihelpers.FlowSchemaSequence, 0, len(newFSs))
 	fsMap := make(map[string]*flowcontrol.FlowSchema, len(newFSs))
 	var haveExemptFS, haveCatchAllFS bool
@@ -613,6 +625,7 @@ func (meal *cfgMeal) digestFlowSchemasLocked(newFSs []*flowcontrol.FlowSchema) {
 // queues, otherwise start the quiescing process if that has not
 // already been started.
 func (meal *cfgMeal) processOldPLsLocked() {
+	klog.Info("[CONTINUUM] 0327")
 	for plName, plState := range meal.cfgCtlr.priorityLevelStates {
 		if meal.newPLStates[plName] != nil {
 			// Still desired and already updated
@@ -660,6 +673,7 @@ func (meal *cfgMeal) processOldPLsLocked() {
 // server's total concurrency limit among them and create/update their
 // QueueSets.
 func (meal *cfgMeal) finishQueueSetReconfigsLocked() {
+	klog.Info("[CONTINUUM] 0328")
 	for plName, plState := range meal.newPLStates {
 		if plState.pl.Spec.Limited == nil {
 			klog.V(5).Infof("Using exempt priority level %q: quiescing=%v", plName, plState.quiescing)
@@ -692,6 +706,7 @@ func (meal *cfgMeal) finishQueueSetReconfigsLocked() {
 // does not call for limiting.  Returns nil and an error if the given
 // object is malformed in a way that is a problem for this package.
 func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flowcontrol.PriorityLevelConfiguration, requestWaitLimit time.Duration, reqsIntPair metrics.RatioedGaugePair, execSeatsObs metrics.RatioedGauge) (fq.QueueSetCompleter, error) {
+	klog.Info("[CONTINUUM] 0329")
 	if (pl.Spec.Type == flowcontrol.PriorityLevelEnablementExempt) != (pl.Spec.Limited == nil) {
 		return nil, errors.New("broken union structure at the top")
 	}
@@ -729,6 +744,7 @@ func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flow
 }
 
 func (meal *cfgMeal) presyncFlowSchemaStatus(fs *flowcontrol.FlowSchema, isDangling bool, plName string) {
+	klog.Info("[CONTINUUM] 0330")
 	danglingCondition := apihelpers.GetFlowSchemaConditionByType(fs, flowcontrol.FlowSchemaConditionDangling)
 	if danglingCondition == nil {
 		danglingCondition = &flowcontrol.FlowSchemaCondition{
@@ -764,6 +780,7 @@ func (meal *cfgMeal) presyncFlowSchemaStatus(fs *flowcontrol.FlowSchema, isDangl
 // imaginePL adds a priority level based on one of the mandatory ones
 // that does not actually exist (right now) as a real API object.
 func (meal *cfgMeal) imaginePL(proto *flowcontrol.PriorityLevelConfiguration, requestWaitLimit time.Duration) {
+	klog.Info("[CONTINUUM] 0331")
 	klog.V(3).Infof("No %s PriorityLevelConfiguration found, imagining one", proto.Name)
 	labelValues := []string{proto.Name}
 	reqsGaugePair := metrics.RatioedGaugeVecPhasedElementPair(meal.cfgCtlr.reqsGaugeVec, 1, 1, labelValues)
@@ -801,6 +818,7 @@ func (cfgCtlr *configController) startRequest(ctx context.Context, rd RequestDig
 	noteFn func(fs *flowcontrol.FlowSchema, pl *flowcontrol.PriorityLevelConfiguration, flowDistinguisher string),
 	workEstimator func() fcrequest.WorkEstimate,
 	queueNoteFn fq.QueueNoteFn) (fs *flowcontrol.FlowSchema, pl *flowcontrol.PriorityLevelConfiguration, isExempt bool, req fq.Request, startWaitingTime time.Time) {
+	klog.Info("[CONTINUUM] 0332")
 	klog.V(7).Infof("startRequest(%#+v)", rd)
 	cfgCtlr.lock.RLock()
 	defer cfgCtlr.lock.RUnlock()
@@ -862,6 +880,7 @@ func (cfgCtlr *configController) startRequest(ctx context.Context, rd RequestDig
 // priority level if it has no more use.  Call this after getting a
 // clue that the given priority level is undesired and idle.
 func (cfgCtlr *configController) maybeReap(plName string) {
+	klog.Info("[CONTINUUM] 0333")
 	cfgCtlr.lock.RLock()
 	defer cfgCtlr.lock.RUnlock()
 	plState := cfgCtlr.priorityLevelStates[plName]
@@ -886,6 +905,7 @@ func (cfgCtlr *configController) maybeReap(plName string) {
 // non-nil and reported being idle, and (2) cfgCtlr's lock has not
 // been released since then.
 func (cfgCtlr *configController) maybeReapReadLocked(plName string, plState *priorityLevelState) {
+	klog.Info("[CONTINUUM] 0334")
 	if !(plState.quiescing && plState.numPending == 0) {
 		return
 	}
@@ -895,6 +915,7 @@ func (cfgCtlr *configController) maybeReapReadLocked(plName string, plState *pri
 
 // computeFlowDistinguisher extracts the flow distinguisher according to the given method
 func computeFlowDistinguisher(rd RequestDigest, method *flowcontrol.FlowDistinguisherMethod) string {
+	klog.Info("[CONTINUUM] 0335")
 	if method == nil {
 		return ""
 	}

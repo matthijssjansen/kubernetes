@@ -105,6 +105,7 @@ func WithLogging(handler http.Handler, pred StacktracePred) http.Handler {
 }
 
 func withLogging(handler http.Handler, stackTracePred StacktracePred, shouldLogRequest ShouldLogRequestPred) http.Handler {
+	klog.Info("[CONTINUUM] 0354")
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if !shouldLogRequest() {
 			handler.ServeHTTP(w, req)
@@ -238,6 +239,7 @@ func SetStacktracePredicate(ctx context.Context, pred StacktracePred) {
 
 // Log is intended to be called once at the end of your request handler, via defer
 func (rl *respLogger) Log() {
+	klog.Info("[CONTINUUM] 0355")
 	latency := time.Since(rl.startTime)
 	auditID := request.GetAuditIDTruncated(rl.req.Context())
 
@@ -287,11 +289,13 @@ func (rl *respLogger) Log() {
 
 // Header implements http.ResponseWriter.
 func (rl *respLogger) Header() http.Header {
+	klog.Info("[CONTINUUM] 0356")
 	return rl.w.Header()
 }
 
 // Write implements http.ResponseWriter.
 func (rl *respLogger) Write(b []byte) (int, error) {
+	klog.Info("[CONTINUUM] 0357")
 	if !rl.statusRecorded {
 		rl.recordStatus(http.StatusOK) // Default if WriteHeader hasn't been called
 	}
@@ -303,6 +307,7 @@ func (rl *respLogger) Write(b []byte) (int, error) {
 
 // WriteHeader implements http.ResponseWriter.
 func (rl *respLogger) WriteHeader(status int) {
+	klog.Info("[CONTINUUM] 0358")
 	rl.recordStatus(status)
 	rl.w.WriteHeader(status)
 }

@@ -289,6 +289,7 @@ func (e *eventBroadcasterImpl) StartLogging(logf func(format string, args ...int
 // StartStructuredLogging starts sending events received from this EventBroadcaster to the structured logging function.
 // The return value can be ignored or used to stop recording, if desired.
 func (e *eventBroadcasterImpl) StartStructuredLogging(verbosity klog.Level) watch.Interface {
+	klog.Info("[CONTINUUM] 0287")
 	return e.StartEventWatcher(
 		func(e *v1.Event) {
 			klog.V(verbosity).InfoS("Event occurred", "object", klog.KRef(e.InvolvedObject.Namespace, e.InvolvedObject.Name), "fieldPath", e.InvolvedObject.FieldPath, "kind", e.InvolvedObject.Kind, "apiVersion", e.InvolvedObject.APIVersion, "type", e.Type, "reason", e.Reason, "message", e.Message)

@@ -30,6 +30,7 @@ import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	cliflag "k8s.io/component-base/cli/flag"
 	logsapi "k8s.io/component-base/logs/api/v1"
+	"k8s.io/klog/v2"
 	"k8s.io/kubelet/config/v1beta1"
 	kubeletapis "k8s.io/kubelet/pkg/apis"
 	"k8s.io/kubernetes/pkg/cluster/ports"
@@ -145,6 +146,7 @@ type KubeletFlags struct {
 
 // NewKubeletFlags will create a new KubeletFlags with default values
 func NewKubeletFlags() *KubeletFlags {
+	klog.Info("[CONTINUUM] 0102")
 	return &KubeletFlags{
 		ContainerRuntimeOptions: *NewContainerRuntimeOptions(),
 		CertDirectory:           "/var/lib/kubelet/pki",
@@ -160,6 +162,7 @@ func NewKubeletFlags() *KubeletFlags {
 
 // ValidateKubeletFlags validates Kubelet's configuration flags and returns an error if they are invalid.
 func ValidateKubeletFlags(f *KubeletFlags) error {
+	klog.Info("[CONTINUUM] 0103")
 	unknownLabels := sets.NewString()
 	invalidLabelErrs := make(map[string][]string)
 	for k, v := range f.NodeLabels {
@@ -253,6 +256,7 @@ type KubeletServer struct {
 
 // NewKubeletServer will create a new KubeletServer with default values.
 func NewKubeletServer() (*KubeletServer, error) {
+	klog.Info("[CONTINUUM] 0104")
 	config, err := NewKubeletConfiguration()
 	if err != nil {
 		return nil, err

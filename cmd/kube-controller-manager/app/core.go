@@ -79,6 +79,7 @@ const (
 )
 
 func startServiceController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0058")
 	serviceController, err := servicecontroller.New(
 		controllerContext.Cloud,
 		controllerContext.ClientBuilder.ClientOrDie("service-controller"),
@@ -97,6 +98,7 @@ func startServiceController(ctx context.Context, controllerContext ControllerCon
 }
 
 func startNodeIpamController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0059")
 	var serviceCIDR *net.IPNet
 	var secondaryServiceCIDR *net.IPNet
 
@@ -179,6 +181,7 @@ func startNodeIpamController(ctx context.Context, controllerContext ControllerCo
 }
 
 func startNodeLifecycleController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0059")
 	lifecycleController, err := lifecyclecontroller.NewNodeLifecycleController(
 		ctx,
 		controllerContext.InformerFactory.Coordination().V1().Leases(),
@@ -205,6 +208,7 @@ func startNodeLifecycleController(ctx context.Context, controllerContext Control
 }
 
 func startCloudNodeLifecycleController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0059")
 	cloudNodeLifecycleController, err := cloudnodelifecyclecontroller.NewCloudNodeLifecycleController(
 		controllerContext.InformerFactory.Core().V1().Nodes(),
 		// cloud node lifecycle controller uses existing cluster role from node-controller
@@ -224,6 +228,7 @@ func startCloudNodeLifecycleController(ctx context.Context, controllerContext Co
 }
 
 func startRouteController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0060")
 	if !controllerContext.ComponentConfig.KubeCloudShared.AllocateNodeCIDRs || !controllerContext.ComponentConfig.KubeCloudShared.ConfigureCloudRoutes {
 		klog.Infof("Will not configure cloud provider routes for allocate-node-cidrs: %v, configure-cloud-routes: %v.", controllerContext.ComponentConfig.KubeCloudShared.AllocateNodeCIDRs, controllerContext.ComponentConfig.KubeCloudShared.ConfigureCloudRoutes)
 		return nil, false, nil
@@ -264,6 +269,7 @@ func startRouteController(ctx context.Context, controllerContext ControllerConte
 }
 
 func startPersistentVolumeBinderController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0061")
 	plugins, err := ProbeControllerVolumePlugins(controllerContext.Cloud, controllerContext.ComponentConfig.PersistentVolumeBinderController.VolumeConfiguration)
 	if err != nil {
 		return nil, true, fmt.Errorf("failed to probe volume plugins when starting persistentvolume controller: %v", err)
@@ -297,6 +303,7 @@ func startPersistentVolumeBinderController(ctx context.Context, controllerContex
 }
 
 func startAttachDetachController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0062")
 	if controllerContext.ComponentConfig.AttachDetachController.ReconcilerSyncLoopPeriod.Duration < time.Second {
 		return nil, true, fmt.Errorf("duration time must be greater than one second as set via command line option reconcile-sync-loop-period")
 	}
@@ -342,6 +349,7 @@ func startAttachDetachController(ctx context.Context, controllerContext Controll
 }
 
 func startVolumeExpandController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0063")
 	plugins, err := ProbeExpandableVolumePlugins(controllerContext.ComponentConfig.PersistentVolumeBinderController.VolumeConfiguration)
 	if err != nil {
 		return nil, true, fmt.Errorf("failed to probe volume plugins when starting volume expand controller: %v", err)
@@ -373,6 +381,7 @@ func startVolumeExpandController(ctx context.Context, controllerContext Controll
 }
 
 func startEphemeralVolumeController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0064")
 	ephemeralController, err := ephemeral.NewController(
 		controllerContext.ClientBuilder.ClientOrDie("ephemeral-volume-controller"),
 		controllerContext.InformerFactory.Core().V1().Pods(),
@@ -385,6 +394,7 @@ func startEphemeralVolumeController(ctx context.Context, controllerContext Contr
 }
 
 func startEndpointController(ctx context.Context, controllerCtx ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0065")
 	go endpointcontroller.NewEndpointController(
 		controllerCtx.InformerFactory.Core().V1().Pods(),
 		controllerCtx.InformerFactory.Core().V1().Services(),
@@ -396,6 +406,7 @@ func startEndpointController(ctx context.Context, controllerCtx ControllerContex
 }
 
 func startReplicationController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0066")
 	go replicationcontroller.NewReplicationManager(
 		controllerContext.InformerFactory.Core().V1().Pods(),
 		controllerContext.InformerFactory.Core().V1().ReplicationControllers(),
@@ -406,6 +417,7 @@ func startReplicationController(ctx context.Context, controllerContext Controlle
 }
 
 func startPodGCController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0067")
 	go podgc.NewPodGC(
 		ctx,
 		controllerContext.ClientBuilder.ClientOrDie("pod-garbage-collector"),
@@ -417,6 +429,7 @@ func startPodGCController(ctx context.Context, controllerContext ControllerConte
 }
 
 func startResourceQuotaController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0068")
 	resourceQuotaControllerClient := controllerContext.ClientBuilder.ClientOrDie("resourcequota-controller")
 	resourceQuotaControllerDiscoveryClient := controllerContext.ClientBuilder.DiscoveryClientOrDie("resourcequota-controller")
 	discoveryFunc := resourceQuotaControllerDiscoveryClient.ServerPreferredNamespacedResources
@@ -454,6 +467,7 @@ func startResourceQuotaController(ctx context.Context, controllerContext Control
 }
 
 func startNamespaceController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0069")
 	// the namespace cleanup controller is very chatty.  It makes lots of discovery calls and then it makes lots of delete calls
 	// the ratelimiter negatively affects its speed.  Deleting 100 total items in a namespace (that's only a few of each resource
 	// including events), takes ~10 seconds by default.
@@ -465,7 +479,7 @@ func startNamespaceController(ctx context.Context, controllerContext ControllerC
 }
 
 func startModifiedNamespaceController(ctx context.Context, controllerContext ControllerContext, namespaceKubeClient clientset.Interface, nsKubeconfig *restclient.Config) (controller.Interface, bool, error) {
-
+	klog.Info("[CONTINUUM] 0070")
 	metadataClient, err := metadata.NewForConfig(nsKubeconfig)
 	if err != nil {
 		return nil, true, err
@@ -487,6 +501,7 @@ func startModifiedNamespaceController(ctx context.Context, controllerContext Con
 }
 
 func startServiceAccountController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0071")
 	sac, err := serviceaccountcontroller.NewServiceAccountsController(
 		controllerContext.InformerFactory.Core().V1().ServiceAccounts(),
 		controllerContext.InformerFactory.Core().V1().Namespaces(),
@@ -501,6 +516,7 @@ func startServiceAccountController(ctx context.Context, controllerContext Contro
 }
 
 func startTTLController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0072")
 	go ttlcontroller.NewTTLController(
 		controllerContext.InformerFactory.Core().V1().Nodes(),
 		controllerContext.ClientBuilder.ClientOrDie("ttl-controller"),
@@ -509,6 +525,7 @@ func startTTLController(ctx context.Context, controllerContext ControllerContext
 }
 
 func startGarbageCollectorController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0073")
 	if !controllerContext.ComponentConfig.GarbageCollectorController.EnableGarbageCollector {
 		return nil, false, nil
 	}
@@ -553,6 +570,7 @@ func startGarbageCollectorController(ctx context.Context, controllerContext Cont
 }
 
 func startPVCProtectionController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0074")
 	pvcProtectionController, err := pvcprotection.NewPVCProtectionController(
 		controllerContext.InformerFactory.Core().V1().PersistentVolumeClaims(),
 		controllerContext.InformerFactory.Core().V1().Pods(),
@@ -566,6 +584,7 @@ func startPVCProtectionController(ctx context.Context, controllerContext Control
 }
 
 func startPVProtectionController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0075")
 	go pvprotection.NewPVProtectionController(
 		controllerContext.InformerFactory.Core().V1().PersistentVolumes(),
 		controllerContext.ClientBuilder.ClientOrDie("pv-protection-controller"),
@@ -574,6 +593,7 @@ func startPVProtectionController(ctx context.Context, controllerContext Controll
 }
 
 func startTTLAfterFinishedController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0076")
 	go ttlafterfinished.New(
 		controllerContext.InformerFactory.Batch().V1().Jobs(),
 		controllerContext.ClientBuilder.ClientOrDie("ttl-after-finished-controller"),
@@ -586,6 +606,7 @@ func startTTLAfterFinishedController(ctx context.Context, controllerContext Cont
 // a flag if cidrs represents a dual stack
 // error if failed to parse any of the cidrs
 func processCIDRs(cidrsList string) ([]*net.IPNet, bool, error) {
+	klog.Info("[CONTINUUM] 0077")
 	cidrsSplit := strings.Split(strings.TrimSpace(cidrsList), ",")
 
 	cidrs, err := netutils.ParseCIDRs(cidrsSplit)
@@ -604,7 +625,7 @@ func processCIDRs(cidrsList string) ([]*net.IPNet, bool, error) {
 // for --node-cidr-mask-size-ipv4 and --node-cidr-mask-size-ipv6 respectively. If value not provided,
 // then it will return default IPv4 and IPv6 cidr mask sizes.
 func setNodeCIDRMaskSizes(cfg nodeipamconfig.NodeIPAMControllerConfiguration, clusterCIDRs []*net.IPNet) ([]int, error) {
-
+	klog.Info("[CONTINUUM] 0078")
 	sortedSizes := func(maskSizeIPv4, maskSizeIPv6 int) []int {
 		nodeMaskCIDRs := make([]int, len(clusterCIDRs))
 
@@ -675,6 +696,7 @@ func setNodeCIDRMaskSizes(cfg nodeipamconfig.NodeIPAMControllerConfiguration, cl
 }
 
 func startStorageVersionGCController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	klog.Info("[CONTINUUM] 0079")
 	go storageversiongc.NewStorageVersionGC(
 		controllerContext.ClientBuilder.ClientOrDie("storage-version-garbage-collector"),
 		controllerContext.InformerFactory.Coordination().V1().Leases(),

@@ -42,6 +42,7 @@ import (
 	"k8s.io/component-base/logs"
 	logsapi "k8s.io/component-base/logs/api/v1"
 	"k8s.io/component-base/metrics"
+	"k8s.io/klog/v2"
 	schedulerappconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/config"
 	"k8s.io/kubernetes/pkg/scheduler"
 	kubeschedulerconfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
@@ -76,6 +77,7 @@ type Options struct {
 
 // NewOptions returns default scheduler app options.
 func NewOptions() *Options {
+	klog.Info("[CONTINUUM] 0080")
 	o := &Options{
 		SecureServing:  apiserveroptions.NewSecureServingOptions().WithLoopback(),
 		Authentication: apiserveroptions.NewDelegatingAuthenticationOptions(),
@@ -112,6 +114,7 @@ func NewOptions() *Options {
 
 // ApplyDeprecated obtains the deprecated CLI args and set them to `o.ComponentConfig` if specified.
 func (o *Options) ApplyDeprecated() {
+	klog.Info("[CONTINUUM] 0081")
 	if o.Flags == nil {
 		return
 	}
@@ -146,6 +149,7 @@ func (o *Options) ApplyDeprecated() {
 // ApplyLeaderElectionTo obtains the CLI args related with leaderelection, and override the values in `cfg`.
 // Then the `cfg` object is injected into the `options` object.
 func (o *Options) ApplyLeaderElectionTo(cfg *kubeschedulerconfig.KubeSchedulerConfiguration) {
+	klog.Info("[CONTINUUM] 0082")
 	if o.Flags == nil {
 		return
 	}
@@ -178,6 +182,7 @@ func (o *Options) ApplyLeaderElectionTo(cfg *kubeschedulerconfig.KubeSchedulerCo
 
 // initFlags initializes flags by section name.
 func (o *Options) initFlags() {
+	klog.Info("[CONTINUUM] 0083")
 	if o.Flags != nil {
 		return
 	}
@@ -202,6 +207,7 @@ func (o *Options) initFlags() {
 
 // ApplyTo applies the scheduler options to the given scheduler app configuration.
 func (o *Options) ApplyTo(c *schedulerappconfig.Config) error {
+	klog.Info("[CONTINUUM] 0084")
 	if len(o.ConfigFile) == 0 {
 		// If the --config arg is not specified, honor the deprecated as well as leader election CLI args.
 		o.ApplyDeprecated()
@@ -245,6 +251,7 @@ func (o *Options) ApplyTo(c *schedulerappconfig.Config) error {
 
 // Validate validates all the required options.
 func (o *Options) Validate() []error {
+	klog.Info("[CONTINUUM] 0085")
 	var errs []error
 
 	if err := validation.ValidateKubeSchedulerConfiguration(o.ComponentConfig); err != nil {
@@ -260,6 +267,7 @@ func (o *Options) Validate() []error {
 
 // Config return a scheduler config object
 func (o *Options) Config() (*schedulerappconfig.Config, error) {
+	klog.Info("[CONTINUUM] 0086")
 	if o.SecureServing != nil {
 		if err := o.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{netutils.ParseIPSloppy("127.0.0.1")}); err != nil {
 			return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
@@ -313,6 +321,7 @@ func (o *Options) Config() (*schedulerappconfig.Config, error) {
 // makeLeaderElectionConfig builds a leader election configuration. It will
 // create a new resource lock associated with the configuration.
 func makeLeaderElectionConfig(config componentbaseconfig.LeaderElectionConfiguration, kubeConfig *restclient.Config, recorder record.EventRecorder) (*leaderelection.LeaderElectionConfig, error) {
+	klog.Info("[CONTINUUM] 0087")
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get hostname: %v", err)
@@ -347,6 +356,7 @@ func makeLeaderElectionConfig(config componentbaseconfig.LeaderElectionConfigura
 // createKubeConfig creates a kubeConfig from the given config and masterOverride.
 // TODO remove masterOverride when CLI flags are removed.
 func createKubeConfig(config componentbaseconfig.ClientConnectionConfiguration, masterOverride string) (*restclient.Config, error) {
+	klog.Info("[CONTINUUM] 0088")
 	kubeConfig, err := clientcmd.BuildConfigFromFlags(masterOverride, config.Kubeconfig)
 	if err != nil {
 		return nil, err
@@ -363,6 +373,7 @@ func createKubeConfig(config componentbaseconfig.ClientConnectionConfiguration, 
 
 // createClients creates a kube client and an event client from the given kubeConfig
 func createClients(kubeConfig *restclient.Config) (clientset.Interface, clientset.Interface, error) {
+	klog.Info("[CONTINUUM] 0089")
 	client, err := clientset.NewForConfig(restclient.AddUserAgent(kubeConfig, "scheduler"))
 	if err != nil {
 		return nil, nil, err

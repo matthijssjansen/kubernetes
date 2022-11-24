@@ -129,6 +129,7 @@ type Controller struct {
 // NewController creates a new Job controller that keeps the relevant pods
 // in sync with their corresponding Job objects.
 func NewController(podInformer coreinformers.PodInformer, jobInformer batchinformers.JobInformer, kubeClient clientset.Interface) *Controller {
+	klog.Info("[CONTINUUM] 0019")
 	eventBroadcaster := record.NewBroadcaster()
 
 	if kubeClient != nil && kubeClient.CoreV1().RESTClient().GetRateLimiter() != nil {
@@ -186,7 +187,7 @@ func (jm *Controller) Run(ctx context.Context, workers int) {
 	defer utilruntime.HandleCrash()
 
 	// Start events processing pipeline.
-	klog.Info("[CONTINUUM] Print job event")
+	klog.Info("[CONTINUUM] 0010")
 	jm.broadcaster.StartStructuredLogging(0)
 	jm.broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: jm.kubeClient.CoreV1().Events("")})
 	defer jm.broadcaster.Shutdown()
@@ -212,6 +213,7 @@ func (jm *Controller) Run(ctx context.Context, workers int) {
 
 // getPodJobs returns a list of Jobs that potentially match a Pod.
 func (jm *Controller) getPodJobs(pod *v1.Pod) []*batch.Job {
+	klog.Info("[CONTINUUM] 0011")
 	jobs, err := jm.jobLister.GetPodJobs(pod)
 	if err != nil {
 		return nil
@@ -232,6 +234,7 @@ func (jm *Controller) getPodJobs(pod *v1.Pod) []*batch.Job {
 // or nil if the ControllerRef could not be resolved to a matching controller
 // of the correct Kind.
 func (jm *Controller) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *batch.Job {
+	klog.Info("[CONTINUUM] 0189")
 	// We can't look up by UID, so look up by Name and then verify UID.
 	// Don't even try to look up by Name if it's the wrong Kind.
 	if controllerRef.Kind != controllerKind.Kind {
@@ -251,6 +254,7 @@ func (jm *Controller) resolveControllerRef(namespace string, controllerRef *meta
 
 // When a pod is created, enqueue the controller that manages it and update its expectations.
 func (jm *Controller) addPod(obj interface{}) {
+	klog.Info("[CONTINUUM] 0012")
 	pod := obj.(*v1.Pod)
 	if pod.DeletionTimestamp != nil {
 		// on a restart of the controller, it's possible a new pod shows up in a state that
@@ -292,6 +296,7 @@ func (jm *Controller) addPod(obj interface{}) {
 // If the labels of the pod have changed we need to awaken both the old
 // and new job. old and cur must be *v1.Pod types.
 func (jm *Controller) updatePod(old, cur interface{}) {
+	klog.Info("[CONTINUUM] 0013")
 	curPod := cur.(*v1.Pod)
 	oldPod := old.(*v1.Pod)
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
@@ -367,6 +372,7 @@ func (jm *Controller) updatePod(old, cur interface{}) {
 // When a pod is deleted, enqueue the job that manages the pod and update its expectations.
 // obj could be an *v1.Pod, or a DeleteFinalStateUnknown marker item.
 func (jm *Controller) deletePod(obj interface{}, final bool) {
+	klog.Info("[CONTINUUM] 0014")
 	pod, ok := obj.(*v1.Pod)
 
 	// When a delete is dropped, the relist will notice a pod in the store not
@@ -420,6 +426,7 @@ func (jm *Controller) deletePod(obj interface{}, final bool) {
 }
 
 func (jm *Controller) updateJob(old, cur interface{}) {
+	klog.Info("[CONTINUUM] 0015")
 	oldJob := old.(*batch.Job)
 	curJob := cur.(*batch.Job)
 
@@ -451,6 +458,7 @@ func (jm *Controller) updateJob(old, cur interface{}) {
 // deleteJob enqueues the job and all the pods associated with it that still
 // have a finalizer.
 func (jm *Controller) deleteJob(obj interface{}) {
+	klog.Info("[CONTINUUM] 0016")
 	jm.enqueueController(obj, true)
 	jobObj, ok := obj.(*batch.Job)
 	if !ok {
@@ -483,14 +491,17 @@ func (jm *Controller) deleteJob(obj interface{}) {
 // immediate tells the controller to update the status right away, and should
 // happen ONLY when there was a successful pod run.
 func (jm *Controller) enqueueController(obj interface{}, immediate bool) {
+	klog.Info("[CONTINUUM] 0017")
 	jm.enqueueControllerDelayed(obj, immediate, 0)
 }
 
 func (jm *Controller) enqueueControllerPodUpdate(obj interface{}, immediate bool) {
+	klog.Info("[CONTINUUM] 0018")
 	jm.enqueueControllerDelayed(obj, immediate, jm.podUpdateBatchPeriod)
 }
 
 func (jm *Controller) enqueueControllerDelayed(obj interface{}, immediate bool, delay time.Duration) {
+	klog.Info("[CONTINUUM] 0188")
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("Couldn't get key for object %+v: %v", obj, err))
@@ -513,6 +524,7 @@ func (jm *Controller) enqueueControllerDelayed(obj interface{}, immediate bool, 
 }
 
 func (jm *Controller) enqueueOrphanPod(obj *v1.Pod) {
+	klog.Info("[CONTINUUM] 0190")
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %+v: %v", obj, err))
@@ -524,11 +536,13 @@ func (jm *Controller) enqueueOrphanPod(obj *v1.Pod) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (jm *Controller) worker(ctx context.Context) {
+	klog.Info("[CONTINUUM] 0020")
 	for jm.processNextWorkItem(ctx) {
 	}
 }
 
 func (jm *Controller) processNextWorkItem(ctx context.Context) bool {
+	klog.Info("[CONTINUUM] 0191")
 	key, quit := jm.queue.Get()
 	if quit {
 		return false
@@ -555,6 +569,7 @@ func (jm *Controller) orphanWorker(ctx context.Context) {
 }
 
 func (jm Controller) processNextOrphanPod(ctx context.Context) bool {
+	klog.Info("[CONTINUUM] 0021")
 	key, quit := jm.orphanQueue.Get()
 	if quit {
 		return false
@@ -573,6 +588,7 @@ func (jm Controller) processNextOrphanPod(ctx context.Context) bool {
 
 // syncOrphanPod removes the tracking finalizer from an orphan pod if found.
 func (jm Controller) syncOrphanPod(ctx context.Context, key string) error {
+	klog.Info("[CONTINUUM] 0192")
 	startTime := time.Now()
 	defer func() {
 		klog.V(4).Infof("Finished syncing orphan pod %q (%v)", key, time.Since(startTime))
@@ -612,6 +628,7 @@ func (jm Controller) syncOrphanPod(ctx context.Context, key string) error {
 // finalizers, if enabled.
 // Note that the returned Pods are pointers into the cache.
 func (jm *Controller) getPodsForJob(ctx context.Context, j *batch.Job, withFinalizers bool) ([]*v1.Pod, error) {
+	klog.Info("[CONTINUUM] 0022")
 	selector, err := metav1.LabelSelectorAsSelector(j.Spec.Selector)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't convert Job selector: %v", err)
@@ -665,6 +682,7 @@ func (jm *Controller) getPodsForJob(ctx context.Context, j *batch.Job, withFinal
 // it did not expect to see any more of its pods created or deleted. This function is not meant to be invoked
 // concurrently with the same key.
 func (jm *Controller) syncJob(ctx context.Context, key string) (forget bool, rErr error) {
+	klog.Info("[CONTINUUM] 0023")
 	startTime := time.Now()
 	defer func() {
 		klog.V(4).Infof("Finished syncing job %q (%v)", key, time.Since(startTime))
@@ -930,6 +948,7 @@ func (jm *Controller) syncJob(ctx context.Context, key string) (forget bool, rEr
 // which the objects can actually be deleted.
 // Returns number of successfully deletions issued.
 func (jm *Controller) deleteActivePods(ctx context.Context, job *batch.Job, pods []*v1.Pod) (int32, error) {
+	klog.Info("[CONTINUUM] 0024")
 	errCh := make(chan error, len(pods))
 	successfulDeletes := int32(len(pods))
 	wg := sync.WaitGroup{}
@@ -951,6 +970,7 @@ func (jm *Controller) deleteActivePods(ctx context.Context, job *batch.Job, pods
 // deleteJobPods deletes the pods, returns the number of successful removals
 // and any error.
 func (jm *Controller) deleteJobPods(ctx context.Context, job *batch.Job, jobKey string, pods []*v1.Pod) (int32, error) {
+	klog.Info("[CONTINUUM] 0025")
 	errCh := make(chan error, len(pods))
 	successfulDeletes := int32(len(pods))
 
@@ -988,6 +1008,7 @@ func (jm *Controller) deleteJobPods(ctx context.Context, job *batch.Job, jobKey 
 // removeTrackingFinalizersFromAllPods removes finalizers from any Job Pod. This is called
 // when Job tracking with finalizers is disabled.
 func (jm *Controller) removeTrackingFinalizersFromAllPods(ctx context.Context, pods []*v1.Pod) error {
+	klog.Info("[CONTINUUM] 0192")
 	var podsWithFinalizer []*v1.Pod
 	for _, pod := range pods {
 		if hasJobTrackingFinalizer(pod) {
@@ -1012,6 +1033,7 @@ func (jm *Controller) removeTrackingFinalizersFromAllPods(ctx context.Context, p
 // It does this up to a limited number of Pods so that the size of .status
 // doesn't grow too much and this sync doesn't starve other Jobs.
 func (jm *Controller) trackJobStatusAndRemoveFinalizers(ctx context.Context, job *batch.Job, pods []*v1.Pod, succeededIndexes orderedIntervals, uncounted uncountedTerminatedPods, expectedRmFinalizers sets.String, finishedCond *batch.JobCondition, needsFlush bool) error {
+	klog.Info("[CONTINUUM] 0193")
 	isIndexed := isIndexedJob(job)
 	var podsToRemoveFinalizer []*v1.Pod
 	uncountedStatus := job.Status.UncountedTerminatedPods
@@ -1130,6 +1152,7 @@ func (jm *Controller) trackJobStatusAndRemoveFinalizers(ctx context.Context, job
 // Returns whether there are pending changes in the Job status that need to be
 // flushed in subsequent calls.
 func (jm *Controller) flushUncountedAndRemoveFinalizers(ctx context.Context, job *batch.Job, podsToRemoveFinalizer []*v1.Pod, uidsWithFinalizer sets.String, oldCounters *batch.JobStatus, needsFlush bool) (*batch.Job, bool, error) {
+	klog.Info("[CONTINUUM] 0194")
 	var err error
 	if needsFlush {
 		if job, err = jm.updateStatusHandler(ctx, job); err != nil {
@@ -1172,6 +1195,7 @@ func (jm *Controller) flushUncountedAndRemoveFinalizers(ctx context.Context, job
 // removed and increments the corresponding status counters.
 // Returns whether there was any status change.
 func cleanUncountedPodsWithoutFinalizers(status *batch.JobStatus, uidsWithFinalizer sets.String) bool {
+	klog.Info("[CONTINUUM] 0195")
 	updated := false
 	uncountedStatus := status.UncountedTerminatedPods
 	newUncounted := filterInUncountedUIDs(uncountedStatus.Succeeded, uidsWithFinalizer)
@@ -1194,6 +1218,7 @@ func cleanUncountedPodsWithoutFinalizers(status *batch.JobStatus, uidsWithFinali
 // of the i-th Pod was successfully removed (if the pod was deleted when this
 // function was called, it's considered as the finalizer was removed successfully).
 func (jm *Controller) removeTrackingFinalizerFromPods(ctx context.Context, jobKey string, pods []*v1.Pod) ([]bool, error) {
+	klog.Info("[CONTINUUM] 0196")
 	errCh := make(chan error, len(pods))
 	succeeded := make([]bool, len(pods))
 	uids := make([]string, len(pods))
@@ -1237,6 +1262,7 @@ func (jm *Controller) removeTrackingFinalizerFromPods(ctx context.Context, jobKe
 // enactJobFinished adds the Complete or Failed condition and records events.
 // Returns whether the Job was considered finished.
 func (jm *Controller) enactJobFinished(job *batch.Job, finishedCond *batch.JobCondition) bool {
+	klog.Info("[CONTINUUM] 0026")
 	if finishedCond == nil {
 		return false
 	}
@@ -1283,6 +1309,7 @@ func newFailedConditionForFailureTarget(condition *batch.JobCondition) *batch.Jo
 // pastBackoffLimitOnFailure checks if container restartCounts sum exceeds BackoffLimit
 // this method applies only to pods with restartPolicy == OnFailure
 func pastBackoffLimitOnFailure(job *batch.Job, pods []*v1.Pod) bool {
+	klog.Info("[CONTINUUM] 0197")
 	if job.Spec.Template.Spec.RestartPolicy != v1.RestartPolicyOnFailure {
 		return false
 	}
@@ -1350,6 +1377,7 @@ func getFailJobMessage(job *batch.Job, pods []*v1.Pod, uncounted sets.String) *s
 // getStatus returns number of succeeded and failed pods running a job. The number
 // of failed pods can be affected by the podFailurePolicy.
 func getStatus(job *batch.Job, pods []*v1.Pod, uncounted *uncountedTerminatedPods, expectedRmFinalizers sets.String) (succeeded, failed int32) {
+	klog.Info("[CONTINUUM] 0027")
 	if uncounted != nil {
 		succeeded = job.Status.Succeeded
 		failed = job.Status.Failed
@@ -1381,6 +1409,7 @@ func jobSuspended(job *batch.Job) bool {
 // pods according to what is specified in the job.Spec.
 // Does NOT modify <activePods>.
 func (jm *Controller) manageJob(ctx context.Context, job *batch.Job, activePods []*v1.Pod, succeeded int32, succeededIndexes []interval) (int32, string, error) {
+	klog.Info("[CONTINUUM] 0028")
 	active := int32(len(activePods))
 	parallelism := *job.Spec.Parallelism
 	jobKey, err := controller.KeyFunc(job)
@@ -1541,6 +1570,7 @@ func (jm *Controller) manageJob(ctx context.Context, job *batch.Job, activePods 
 // < scheduled, and pending < running. This ensures that we delete pods
 // in the earlier stages whenever possible.
 func activePodsForRemoval(job *batch.Job, pods []*v1.Pod, rmAtLeast int) []*v1.Pod {
+	klog.Info("[CONTINUUM] 0198")
 	var rm, left []*v1.Pod
 
 	if isIndexedJob(job) {
@@ -1560,16 +1590,19 @@ func activePodsForRemoval(job *batch.Job, pods []*v1.Pod, rmAtLeast int) []*v1.P
 
 // updateJobStatus calls the API to update the job status.
 func (jm *Controller) updateJobStatus(ctx context.Context, job *batch.Job) (*batch.Job, error) {
+	klog.Info("[CONTINUUM] 0199")
 	return jm.kubeClient.BatchV1().Jobs(job.Namespace).UpdateStatus(ctx, job, metav1.UpdateOptions{})
 }
 
 func (jm *Controller) patchJob(ctx context.Context, job *batch.Job, data []byte) error {
+	klog.Info("[CONTINUUM] 0200")
 	_, err := jm.kubeClient.BatchV1().Jobs(job.Namespace).Patch(
 		ctx, job.Name, types.StrategicMergePatchType, data, metav1.PatchOptions{})
 	return err
 }
 
 func getBackoff(queue workqueue.RateLimitingInterface, key interface{}) time.Duration {
+	klog.Info("[CONTINUUM] 0201")
 	exp := queue.NumRequeues(key)
 
 	if exp <= 0 {
@@ -1593,6 +1626,7 @@ func getBackoff(queue workqueue.RateLimitingInterface, key interface{}) time.Dur
 // Pods are valid if they have a finalizer and, for Indexed Jobs, a valid
 // completion index.
 func countValidPodsWithFilter(job *batch.Job, pods []*v1.Pod, uncounted sets.String, expectedRmFinalizers sets.String, filter func(*v1.Pod) bool) int {
+	klog.Info("[CONTINUUM] 0202")
 	result := len(uncounted)
 	for _, p := range pods {
 		uid := string(p.UID)
@@ -1721,6 +1755,7 @@ func errorFromChannel(errCh <-chan error) error {
 // update the status condition to false. The function returns a bool to let the
 // caller know if the list was changed (either appended or updated).
 func ensureJobConditionStatus(list []batch.JobCondition, cType batch.JobConditionType, status v1.ConditionStatus, reason, message string) ([]batch.JobCondition, bool) {
+	klog.Info("[CONTINUUM] 0203")
 	if condition := findConditionByType(list, cType); condition != nil {
 		if condition.Status != status || condition.Reason != reason || condition.Message != message {
 			*condition = *newCondition(cType, status, reason, message)
@@ -1755,6 +1790,7 @@ func findConditionByType(list []batch.JobCondition, cType batch.JobConditionType
 }
 
 func recordJobPodFinished(job *batch.Job, oldCounters batch.JobStatus) {
+	klog.Info("[CONTINUUM] 0204")
 	completionMode := completionModeStr(job)
 	diff := job.Status.Succeeded - oldCounters.Succeeded
 	metrics.JobPodsFinished.WithLabelValues(completionMode, metrics.Succeeded).Add(float64(diff))
