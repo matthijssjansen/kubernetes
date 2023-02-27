@@ -184,10 +184,9 @@ func getAPIServerCommand(cfg *kubeadmapi.ClusterConfiguration, localAPIEndpoint 
 		"requestheader-allowed-names":        "front-proxy-client",
 		"proxy-client-cert-file":             filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyClientCertName),
 		"proxy-client-key-file":              filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyClientKeyName),
-		"v":                                  "9",
 	}
 
-	command := []string{"kube-apiserver"}
+	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-apiserver"}
 
 	// If the user set endpoints for an external etcd cluster
 	if cfg.Etcd.External != nil {
@@ -314,7 +313,6 @@ func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration) []string 
 		"cluster-signing-key-file":         filepath.Join(cfg.CertificatesDir, kubeadmconstants.CAKeyName),
 		"use-service-account-credentials":  "true",
 		"controllers":                      "*,bootstrapsigner,tokencleaner",
-		"v":                                "9",
 	}
 
 	// If using external CA, pass empty string to controller manager instead of ca.key/ca.crt path,
@@ -339,7 +337,7 @@ func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration) []string 
 		defaultArguments["cluster-name"] = cfg.ClusterName
 	}
 
-	command := []string{"kube-controller-manager"}
+	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-controller-manager"}
 	command = append(command, kubeadmutil.BuildArgumentListFromMap(defaultArguments, cfg.ControllerManager.ExtraArgs)...)
 
 	return command
@@ -354,10 +352,9 @@ func getSchedulerCommand(cfg *kubeadmapi.ClusterConfiguration) []string {
 		"kubeconfig":                kubeconfigFile,
 		"authentication-kubeconfig": kubeconfigFile,
 		"authorization-kubeconfig":  kubeconfigFile,
-		"v":                         "9",
 	}
 
-	command := []string{"kube-scheduler"}
+	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-scheduler"}
 	command = append(command, kubeadmutil.BuildArgumentListFromMap(defaultArguments, cfg.Scheduler.ExtraArgs)...)
 	return command
 }

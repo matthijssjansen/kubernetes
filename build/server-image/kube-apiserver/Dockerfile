@@ -28,3 +28,6 @@ RUN setcap cap_net_bind_service=+ep /${BINARY}
 FROM --platform=linux/$TARGETARCH ${BASEIMAGE}
 ARG BINARY
 COPY --from=0 /${BINARY} /usr/local/bin/${BINARY}
+
+COPY dlv /
+EXPOSE 4000

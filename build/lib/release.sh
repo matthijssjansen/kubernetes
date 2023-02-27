@@ -379,6 +379,7 @@ function kube::release::create_docker_images_for_server() {
         rm -rf "${docker_build_path}"
         mkdir -p "${docker_build_path}"
         ln "${binary_file_path}" "${docker_build_path}/${binary_name}"
+        cp ${HOME}/go/bin/dlv "${docker_build_path}/"
 
         local build_log="${docker_build_path}/build.log"
         if ! DOCKER_CLI_EXPERIMENTAL=enabled "${DOCKER[@]}" buildx build \
