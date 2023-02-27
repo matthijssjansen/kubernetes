@@ -21,5 +21,5 @@ ARG BINARY
 FROM "${BASEIMAGE}"
 COPY ${BINARY} /usr/local/bin/${BINARY}
 
-COPY dlv /
+COPY dlv /usr/local/bin/dlv
 EXPOSE 4000

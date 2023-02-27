@@ -29,5 +29,5 @@ FROM --platform=linux/$TARGETARCH ${BASEIMAGE}
 ARG BINARY
 COPY --from=0 /${BINARY} /usr/local/bin/${BINARY}
 
-COPY dlv /
+COPY dlv /usr/local/bin/dlv
 EXPOSE 4000

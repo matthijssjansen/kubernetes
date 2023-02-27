@@ -186,7 +186,7 @@ func getAPIServerCommand(cfg *kubeadmapi.ClusterConfiguration, localAPIEndpoint 
 		"proxy-client-key-file":              filepath.Join(cfg.CertificatesDir, kubeadmconstants.FrontProxyClientKeyName),
 	}
 
-	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-apiserver"}
+	command := []string{"/usr/local/bin/dlv", "--listen=:4000", "--headless=true", "--accept-multiclient", "--api-version=2", "exec", "/usr/local/bin/kube-apiserver", "--"}
 
 	// If the user set endpoints for an external etcd cluster
 	if cfg.Etcd.External != nil {
@@ -337,7 +337,7 @@ func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration) []string 
 		defaultArguments["cluster-name"] = cfg.ClusterName
 	}
 
-	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-controller-manager"}
+	command := []string{"/usr/local/bin/dlv", "--listen=:4000", "--headless=true", "--accept-multiclient", "--api-version=2", "exec", "/usr/local/bin/kube-controller-manager", "--"}
 	command = append(command, kubeadmutil.BuildArgumentListFromMap(defaultArguments, cfg.ControllerManager.ExtraArgs)...)
 
 	return command
@@ -354,7 +354,7 @@ func getSchedulerCommand(cfg *kubeadmapi.ClusterConfiguration) []string {
 		"authorization-kubeconfig":  kubeconfigFile,
 	}
 
-	command := []string{"/dlv --list=:4000 --headless=true --accept-multiclient --api-version=2 exec kube-scheduler"}
+	command := []string{"/usr/local/bin/dlv", "--listen=:4000", "--headless=true", "--accept-multiclient", "--api-version=2", "exec", "/usr/local/bin/kube-scheduler", "--"}
 	command = append(command, kubeadmutil.BuildArgumentListFromMap(defaultArguments, cfg.Scheduler.ExtraArgs)...)
 	return command
 }
