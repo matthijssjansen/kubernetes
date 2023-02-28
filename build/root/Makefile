@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DBG := 1
-
 DBG_MAKEFILE ?=
 ifeq ($(DBG_MAKEFILE),1)
     $(warning ***** starting Makefile for goal(s) "$(MAKECMDGOALS)")

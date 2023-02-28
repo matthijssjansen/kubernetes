@@ -845,6 +845,7 @@ kube::golang::build_binaries() {
     fi
 
     goldflags="all=$(kube::version::ldflags) ${GOLDFLAGS:-}"
+    DBG=1
     if [[ "${DBG:-}" != 1 ]]; then
         # Not debugging - disable symbols and DWARF.
         goldflags="${goldflags} -s -w"
