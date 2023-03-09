@@ -18,6 +18,7 @@ package main
 
 import (
 	"k8s.io/component-base/cli"
+	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd"
 	"k8s.io/kubectl/pkg/cmd/util"
 
@@ -26,9 +27,12 @@ import (
 )
 
 func main() {
+	klog.Info("[CONTINUUM] 0400 - KUBECTL START")
 	command := cmd.NewDefaultKubectlCommand()
+	klog.Info("[CONTINUUM] 0402 - KUBECTL COMMAND FORMED")
 	if err := cli.RunNoErrOutput(command); err != nil {
 		// Pretty-print the error and exit with an error.
 		util.CheckErr(err)
 	}
+	klog.Info("[CONTINUUM] 0410 - KUBECTL FINISHED")
 }

@@ -182,6 +182,7 @@ func NewApplyFlags(f cmdutil.Factory, streams genericclioptions.IOStreams) *Appl
 
 // NewCmdApply creates the `apply` command
 func NewCmdApply(baseName string, f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	klog.Info("[CONTINUUM] 0401 - KUBECTL CREATE APPLY COMMAND")
 	flags := NewApplyFlags(f, ioStreams)
 
 	cmd := &cobra.Command{
@@ -230,6 +231,7 @@ func (flags *ApplyFlags) AddFlags(cmd *cobra.Command) {
 
 // ToOptions converts from CLI inputs to runtime inputs
 func (flags *ApplyFlags) ToOptions(cmd *cobra.Command, baseName string, args []string) (*ApplyOptions, error) {
+	klog.Info("[CONTINUUM] 0403 - KUBECTL TO OPTIONS")
 	if len(args) != 0 {
 		return nil, cmdutil.UsageErrorf(cmd, "Unexpected args: %v", args)
 	}
@@ -344,11 +346,13 @@ func (flags *ApplyFlags) ToOptions(cmd *cobra.Command, baseName string, args []s
 
 	o.PostProcessorFn = o.PrintAndPrunePostProcessor()
 
+	klog.Info("[CONTINUUM] 0404 - KUBECTL TO OPTIONS END")
 	return o, nil
 }
 
 // Validate verifies if ApplyOptions are valid and without conflicts.
 func (o *ApplyOptions) Validate() error {
+	klog.Info("[CONTINUUM] 0405 - KUBECTL APPLY START VALIDATE")
 	if o.ForceConflicts && !o.ServerSideApply {
 		return fmt.Errorf("--force-conflicts only works with --server-side")
 	}
@@ -425,7 +429,7 @@ func (o *ApplyOptions) SetObjects(infos []*resource.Info) {
 
 // Run executes the `apply` command.
 func (o *ApplyOptions) Run() error {
-	klog.Info("[CONTINUUM] 0005")
+	klog.Info("[CONTINUUM] 0406 - KUBECTL APPLY START EXECUTE")
 	if o.PreProcessorFn != nil {
 		klog.V(4).Infof("Running apply pre-processor function")
 		if err := o.PreProcessorFn(); err != nil {
@@ -470,11 +474,12 @@ func (o *ApplyOptions) Run() error {
 		}
 	}
 
+	klog.Info("[CONTINUUM] 0409 - KUBECTL APPLY END")
 	return nil
 }
 
 func (o *ApplyOptions) applyOneObject(info *resource.Info) error {
-	klog.Info("[CONTINUUM] 0004")
+	klog.Info("[CONTINUUM] 0407 - KUBECTL APPLY ONE OBJECT")
 	o.MarkNamespaceVisited(info)
 
 	if err := o.Recorder.Record(info.Object); err != nil {
@@ -586,7 +591,7 @@ See https://kubernetes.io/docs/reference/using-api/server-side-apply/#conflicts`
 
 		if o.DryRunStrategy != cmdutil.DryRunClient {
 			// Then create the resource and skip the three-way merge
-			klog.Info("[CONTINUUM] 0003")
+			klog.Info("[CONTINUUM] 0408 - KUBECTL APPLY CREATE AND SEND")
 			obj, err := helper.Create(info.Namespace, true, info.Object)
 			if err != nil {
 				return cmdutil.AddSourceToErr("creating", info.Source, err)
