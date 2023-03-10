@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -32,7 +33,7 @@ import (
 )
 
 func loadConfigFromFile(file string) (*config.KubeSchedulerConfiguration, error) {
-	klog.Info("[CONTINUUM] 0090")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0090")
 	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -42,7 +43,7 @@ func loadConfigFromFile(file string) (*config.KubeSchedulerConfiguration, error)
 }
 
 func loadConfig(data []byte) (*config.KubeSchedulerConfiguration, error) {
-	klog.Info("[CONTINUUM] 0091")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0091")
 	// The UniversalDecoder runs defaulting and returns the internal type by default.
 	obj, gvk, err := scheme.Codecs.UniversalDecoder().Decode(data, nil, nil)
 	if err != nil {
@@ -63,7 +64,7 @@ func loadConfig(data []byte) (*config.KubeSchedulerConfiguration, error) {
 }
 
 func encodeConfig(cfg *config.KubeSchedulerConfiguration) (*bytes.Buffer, error) {
-	klog.Info("[CONTINUUM] 0092")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0092")
 	buf := new(bytes.Buffer)
 	const mediaType = runtime.ContentTypeYAML
 	info, ok := runtime.SerializerInfoForMediaType(scheme.Codecs.SupportedMediaTypes(), mediaType)
@@ -90,7 +91,7 @@ func encodeConfig(cfg *config.KubeSchedulerConfiguration) (*bytes.Buffer, error)
 
 // LogOrWriteConfig logs the completed component config and writes it into the given file name as YAML, if either is enabled
 func LogOrWriteConfig(fileName string, cfg *config.KubeSchedulerConfiguration, completedProfiles []config.KubeSchedulerProfile) error {
-	klog.Info("[CONTINUUM] 0093")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0093")
 	klogV := klog.V(2)
 	if !klogV.Enabled() && len(fileName) == 0 {
 		return nil

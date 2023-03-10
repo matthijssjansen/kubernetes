@@ -19,7 +19,9 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 	_ "time/tzdata" // for timeZone support in CronJob
 
 	"k8s.io/component-base/cli"
@@ -27,12 +29,10 @@ import (
 	_ "k8s.io/component-base/metrics/prometheus/clientgo" // load all the prometheus client-go plugins
 	_ "k8s.io/component-base/metrics/prometheus/version"  // for version metric registration
 	"k8s.io/kubernetes/cmd/kube-apiserver/app"
-
-	"k8s.io/klog/v2"
 )
 
 func main() {
-	klog.Info("[CONTINUUM] 0040")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0040")
 	command := app.NewAPIServerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

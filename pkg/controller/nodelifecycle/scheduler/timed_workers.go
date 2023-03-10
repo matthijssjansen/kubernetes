@@ -18,6 +18,7 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -51,7 +52,7 @@ type TimedWorker struct {
 
 // createWorker creates a TimedWorker that will execute `f` not earlier than `fireAt`.
 func createWorker(ctx context.Context, args *WorkArgs, createdAt time.Time, fireAt time.Time, f func(ctx context.Context, args *WorkArgs) error, clock clock.WithDelayedExecution) *TimedWorker {
-	klog.Info("[CONTINUUM] 0288")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0288")
 	delay := fireAt.Sub(createdAt)
 	if delay <= 0 {
 		go f(ctx, args)
@@ -85,7 +86,7 @@ type TimedWorkerQueue struct {
 // CreateWorkerQueue creates a new TimedWorkerQueue for workers that will execute
 // given function `f`.
 func CreateWorkerQueue(f func(ctx context.Context, args *WorkArgs) error) *TimedWorkerQueue {
-	klog.Info("[CONTINUUM] 0289")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0289")
 	return &TimedWorkerQueue{
 		workers:  make(map[string]*TimedWorker),
 		workFunc: f,
@@ -94,7 +95,7 @@ func CreateWorkerQueue(f func(ctx context.Context, args *WorkArgs) error) *Timed
 }
 
 func (q *TimedWorkerQueue) getWrappedWorkerFunc(key string) func(ctx context.Context, args *WorkArgs) error {
-	klog.Info("[CONTINUUM] 0290")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0290")
 	return func(ctx context.Context, args *WorkArgs) error {
 		err := q.workFunc(ctx, args)
 		q.Lock()
@@ -112,7 +113,7 @@ func (q *TimedWorkerQueue) getWrappedWorkerFunc(key string) func(ctx context.Con
 
 // AddWork adds a work to the WorkerQueue which will be executed not earlier than `fireAt`.
 func (q *TimedWorkerQueue) AddWork(ctx context.Context, args *WorkArgs, createdAt time.Time, fireAt time.Time) {
-	klog.Info("[CONTINUUM] 0291")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0291")
 	key := args.KeyFromWorkArgs()
 	klog.V(4).Infof("Adding TimedWorkerQueue item %v at %v to be fired at %v", key, createdAt, fireAt)
 
@@ -128,7 +129,7 @@ func (q *TimedWorkerQueue) AddWork(ctx context.Context, args *WorkArgs, createdA
 
 // CancelWork removes scheduled function execution from the queue. Returns true if work was cancelled.
 func (q *TimedWorkerQueue) CancelWork(key string) bool {
-	klog.Info("[CONTINUUM] 0292")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0292")
 	q.Lock()
 	defer q.Unlock()
 	worker, found := q.workers[key]

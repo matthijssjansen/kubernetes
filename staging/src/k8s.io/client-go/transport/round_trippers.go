@@ -239,7 +239,7 @@ func NewImpersonatingRoundTripper(impersonate ImpersonationConfig, delegate http
 }
 
 func (rt *impersonatingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	klog.Info("[CONTINUUM] 0145")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0145")
 	// use the user header as marker for the rest.
 	if len(req.Header.Get(ImpersonateUserHeader)) != 0 {
 		return rt.delegate.RoundTrip(req)
@@ -303,7 +303,7 @@ func NewBearerAuthWithRefreshRoundTripper(bearer string, tokenFile string, rt ht
 }
 
 func (rt *bearerAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	klog.Info("[CONTINUUM] 0144")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0144")
 	if len(req.Header.Get("Authorization")) != 0 {
 		return rt.rt.RoundTrip(req)
 	}
@@ -459,7 +459,7 @@ func maskValue(key string, value string) string {
 }
 
 func (rt *debuggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	klog.Info("[CONTINUUM] 0143")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0143")
 	reqInfo := newRequestInfo(req)
 
 	if rt.levels[DebugJustURL] {

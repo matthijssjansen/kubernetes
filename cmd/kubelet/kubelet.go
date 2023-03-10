@@ -22,18 +22,19 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"k8s.io/component-base/cli"
 	_ "k8s.io/component-base/logs/json/register" // for JSON log format registration
 	_ "k8s.io/component-base/metrics/prometheus/restclient"
 	_ "k8s.io/component-base/metrics/prometheus/version" // for version metric registration
-	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/cmd/kubelet/app"
 )
 
 func main() {
-	klog.Info("[CONTINUUM] 0101")
+	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0101")
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)
 	os.Exit(code)
