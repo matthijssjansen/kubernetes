@@ -24,7 +24,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"k8s.io/klog/v2"
 
@@ -97,7 +96,7 @@ func NewPathRecorderMux(name string) *PathRecorderMux {
 
 // ListedPaths returns the registered handler exposedPaths.
 func (m *PathRecorderMux) ListedPaths() []string {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0341")
+	klog.Info("[CONTINUUM] 0341")
 	handledPaths := append([]string{}, m.exposedPaths...)
 	sort.Strings(handledPaths)
 
@@ -105,7 +104,7 @@ func (m *PathRecorderMux) ListedPaths() []string {
 }
 
 func (m *PathRecorderMux) trackCallers(path string) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0342")
+	klog.Info("[CONTINUUM] 0342")
 	stack := string(debug.Stack())
 	if existingStack, ok := m.pathStacks[path]; ok {
 		utilruntime.HandleError(fmt.Errorf("duplicate path registration of %q: original registration from %v\n\nnew registration from %v", path, existingStack, stack))
@@ -116,7 +115,7 @@ func (m *PathRecorderMux) trackCallers(path string) {
 // refreshMuxLocked creates a new mux and must be called while locked.  Otherwise the view of handlers may
 // not be consistent
 func (m *PathRecorderMux) refreshMuxLocked() {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0343")
+	klog.Info("[CONTINUUM] 0343")
 	newMux := &pathHandler{
 		muxName:         m.name,
 		pathToHandler:   map[string]http.Handler{},
@@ -144,7 +143,7 @@ func (m *PathRecorderMux) refreshMuxLocked() {
 
 // NotFoundHandler sets the handler to use if there's no match for a give path
 func (m *PathRecorderMux) NotFoundHandler(notFoundHandler http.Handler) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0344")
+	klog.Info("[CONTINUUM] 0344")
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -155,7 +154,7 @@ func (m *PathRecorderMux) NotFoundHandler(notFoundHandler http.Handler) {
 
 // Unregister removes a path from the mux.
 func (m *PathRecorderMux) Unregister(path string) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0345")
+	klog.Info("[CONTINUUM] 0345")
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -175,7 +174,7 @@ func (m *PathRecorderMux) Unregister(path string) {
 // Handle registers the handler for the given pattern.
 // If a handler already exists for pattern, Handle panics.
 func (m *PathRecorderMux) Handle(path string, handler http.Handler) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0346")
+	klog.Info("[CONTINUUM] 0346")
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.trackCallers(path)
@@ -188,14 +187,14 @@ func (m *PathRecorderMux) Handle(path string, handler http.Handler) {
 // HandleFunc registers the handler function for the given pattern.
 // If a handler already exists for pattern, Handle panics.
 func (m *PathRecorderMux) HandleFunc(path string, handler func(http.ResponseWriter, *http.Request)) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0347")
+	klog.Info("[CONTINUUM] 0347")
 	m.Handle(path, http.HandlerFunc(handler))
 }
 
 // UnlistedHandle registers the handler for the given pattern, but doesn't list it.
 // If a handler already exists for pattern, Handle panics.
 func (m *PathRecorderMux) UnlistedHandle(path string, handler http.Handler) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0348")
+	klog.Info("[CONTINUUM] 0348")
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.trackCallers(path)
@@ -207,13 +206,13 @@ func (m *PathRecorderMux) UnlistedHandle(path string, handler http.Handler) {
 // UnlistedHandleFunc registers the handler function for the given pattern, but doesn't list it.
 // If a handler already exists for pattern, Handle panics.
 func (m *PathRecorderMux) UnlistedHandleFunc(path string, handler func(http.ResponseWriter, *http.Request)) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0349")
+	klog.Info("[CONTINUUM] 0349")
 	m.UnlistedHandle(path, http.HandlerFunc(handler))
 }
 
 // HandlePrefix is like Handle, but matches for anything under the path.  Like a standard golang trailing slash.
 func (m *PathRecorderMux) HandlePrefix(path string, handler http.Handler) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0350")
+	klog.Info("[CONTINUUM] 0350")
 	if !strings.HasSuffix(path, "/") {
 		panic(fmt.Sprintf("%q must end in a trailing slash", path))
 	}
@@ -229,7 +228,7 @@ func (m *PathRecorderMux) HandlePrefix(path string, handler http.Handler) {
 
 // UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
 func (m *PathRecorderMux) UnlistedHandlePrefix(path string, handler http.Handler) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0351")
+	klog.Info("[CONTINUUM] 0351")
 	if !strings.HasSuffix(path, "/") {
 		panic(fmt.Sprintf("%q must end in a trailing slash", path))
 	}
@@ -244,13 +243,13 @@ func (m *PathRecorderMux) UnlistedHandlePrefix(path string, handler http.Handler
 
 // ServeHTTP makes it an http.Handler
 func (m *PathRecorderMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0352")
+	klog.Info("[CONTINUUM] 0352")
 	m.mux.Load().(*pathHandler).ServeHTTP(w, r)
 }
 
 // ServeHTTP makes it an http.Handler
 func (h *pathHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0353")
+	klog.Info("[CONTINUUM] 0353")
 	if exactHandler, ok := h.pathToHandler[r.URL.Path]; ok {
 		klog.V(5).Infof("%v: %q satisfied by exact match", h.muxName, r.URL.Path)
 		exactHandler.ServeHTTP(w, r)

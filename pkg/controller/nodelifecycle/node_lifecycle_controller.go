@@ -249,7 +249,7 @@ func (n *nodeEvictionMap) setStatus(nodeName string, status evictionStatus) bool
 }
 
 func (n *nodeEvictionMap) getStatus(nodeName string) (evictionStatus, bool) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0293")
+	klog.Info("[CONTINUUM] 0293")
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, exists := n.nodeEvictions[nodeName]; !exists {
@@ -366,7 +366,7 @@ func NewNodeLifecycleController(
 	unhealthyZoneThreshold float32,
 	runTaintManager bool,
 ) (*Controller, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0294")
+	klog.Info("[CONTINUUM] 0294")
 	if kubeClient == nil {
 		klog.Fatalf("kubeClient is nil when starting Controller")
 	}
@@ -526,7 +526,7 @@ func NewNodeLifecycleController(
 
 // Run starts an asynchronous loop that monitors the status of cluster nodes.
 func (nc *Controller) Run(ctx context.Context) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0295")
+	klog.Info("[CONTINUUM] 0295")
 	defer utilruntime.HandleCrash()
 
 	// Start events processing pipeline.
@@ -588,7 +588,7 @@ func (nc *Controller) Run(ctx context.Context) {
 }
 
 func (nc *Controller) doNodeProcessingPassWorker(ctx context.Context) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0296")
+	klog.Info("[CONTINUUM] 0296")
 	for {
 		obj, shutdown := nc.nodeUpdateQueue.Get()
 		// "nodeUpdateQueue" will be shutdown when "stopCh" closed;
@@ -612,7 +612,7 @@ func (nc *Controller) doNodeProcessingPassWorker(ctx context.Context) {
 }
 
 func (nc *Controller) doNoScheduleTaintingPass(ctx context.Context, nodeName string) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0297")
+	klog.Info("[CONTINUUM] 0297")
 	node, err := nc.nodeLister.Get(nodeName)
 	if err != nil {
 		// If node not found, just ignore it.
@@ -668,7 +668,7 @@ func (nc *Controller) doNoScheduleTaintingPass(ctx context.Context, nodeName str
 }
 
 func (nc *Controller) doNoExecuteTaintingPass(ctx context.Context) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0298")
+	klog.Info("[CONTINUUM] 0298")
 	// Extract out the keys of the map in order to not hold
 	// the evictorLock for the entire function and hold it
 	// only when nescessary.
@@ -734,7 +734,7 @@ func (nc *Controller) doNoExecuteTaintingPass(ctx context.Context) {
 }
 
 func (nc *Controller) doEvictionPass(ctx context.Context) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0299")
+	klog.Info("[CONTINUUM] 0299")
 	// Extract out the keys of the map in order to not hold
 	// the evictorLock for the entire function and hold it
 	// only when nescessary.
@@ -805,7 +805,7 @@ func (nc *Controller) doEvictionPass(ctx context.Context) {
 // if not, post "NodeReady==ConditionUnknown".
 // This function will taint nodes who are not ready or not reachable for a long period of time.
 func (nc *Controller) monitorNodeHealth(ctx context.Context) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0300")
+	klog.Info("[CONTINUUM] 0300")
 	// We are listing nodes from local cache as we can tolerate some small delays
 	// comparing to state from etcd and there is eventual consistency anyway.
 	nodes, err := nc.nodeLister.List(labels.Everything())
@@ -907,7 +907,7 @@ func (nc *Controller) monitorNodeHealth(ctx context.Context) error {
 }
 
 func (nc *Controller) processTaintBaseEviction(ctx context.Context, node *v1.Node, observedReadyCondition *v1.NodeCondition) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0301")
+	klog.Info("[CONTINUUM] 0301")
 	decisionTimestamp := nc.now()
 	// Check eviction timeout against decisionTimestamp
 	switch observedReadyCondition.Status {
@@ -949,7 +949,7 @@ func (nc *Controller) processTaintBaseEviction(ctx context.Context, node *v1.Nod
 }
 
 func (nc *Controller) processNoTaintBaseEviction(ctx context.Context, node *v1.Node, observedReadyCondition *v1.NodeCondition, gracePeriod time.Duration, pods []*v1.Pod) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0302")
+	klog.Info("[CONTINUUM] 0302")
 	decisionTimestamp := nc.now()
 	nodeHealthData := nc.nodeHealthMap.getDeepCopy(node.Name)
 	if nodeHealthData == nil {
@@ -1009,7 +1009,7 @@ func isNodeExcludedFromDisruptionChecks(node *v1.Node) bool {
 // tryUpdateNodeHealth checks a given node's conditions and tries to update it. Returns grace period to
 // which given node is entitled, state of current and last observed Ready Condition, and an error if it occurred.
 func (nc *Controller) tryUpdateNodeHealth(ctx context.Context, node *v1.Node) (time.Duration, v1.NodeCondition, *v1.NodeCondition, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0007")
+	klog.Info("[CONTINUUM] 0007")
 	nodeHealth := nc.nodeHealthMap.getDeepCopy(node.Name)
 	defer func() {
 		nc.nodeHealthMap.set(node.Name, nodeHealth)
@@ -1176,7 +1176,7 @@ func (nc *Controller) tryUpdateNodeHealth(ctx context.Context, node *v1.Node) (t
 }
 
 func (nc *Controller) handleDisruption(ctx context.Context, zoneToNodeConditions map[string][]*v1.NodeCondition, nodes []*v1.Node) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0303")
+	klog.Info("[CONTINUUM] 0303")
 	newZoneStates := map[string]ZoneState{}
 	allAreFullyDisrupted := true
 	for k, v := range zoneToNodeConditions {
@@ -1275,7 +1275,7 @@ func (nc *Controller) handleDisruption(ctx context.Context, zoneToNodeConditions
 }
 
 func (nc *Controller) podUpdated(oldPod, newPod *v1.Pod) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0008")
+	klog.Info("[CONTINUUM] 0008")
 	if newPod == nil {
 		return
 	}
@@ -1286,7 +1286,7 @@ func (nc *Controller) podUpdated(oldPod, newPod *v1.Pod) {
 }
 
 func (nc *Controller) doPodProcessingWorker(ctx context.Context) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0304")
+	klog.Info("[CONTINUUM] 0304")
 	for {
 		obj, shutdown := nc.podUpdateQueue.Get()
 		// "podUpdateQueue" will be shutdown when "stopCh" closed;
@@ -1305,7 +1305,7 @@ func (nc *Controller) doPodProcessingWorker(ctx context.Context) {
 // 2. for NodeReady=false or unknown node, taint eviction of pod will happen and pod will be marked as not ready
 // 3. if node doesn't exist in cache, it will be skipped and handled later by doEvictionPass
 func (nc *Controller) processPod(ctx context.Context, podItem podUpdateItem) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0009")
+	klog.Info("[CONTINUUM] 0009")
 	defer nc.podUpdateQueue.Done(podItem)
 	pod, err := nc.podLister.Pods(podItem.namespace).Get(podItem.name)
 	if err != nil {
@@ -1362,7 +1362,7 @@ func (nc *Controller) processPod(ctx context.Context, podItem podUpdateItem) {
 }
 
 func (nc *Controller) setLimiterInZone(zone string, zoneSize int, state ZoneState) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0305")
+	klog.Info("[CONTINUUM] 0305")
 	switch state {
 	case stateNormal:
 		if nc.runTaintManager {
@@ -1394,7 +1394,7 @@ func (nc *Controller) setLimiterInZone(zone string, zoneSize int, state ZoneStat
 //  2. deleted: the nodes that in 'knownNodeSet', but not in 'allNodes'
 //  3. newZoneRepresentatives: the nodes that in both 'knownNodeSet' and 'allNodes', but no zone states
 func (nc *Controller) classifyNodes(allNodes []*v1.Node) (added, deleted, newZoneRepresentatives []*v1.Node) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0306")
+	klog.Info("[CONTINUUM] 0306")
 	for i := range allNodes {
 		if _, has := nc.knownNodeSet[allNodes[i].Name]; !has {
 			added = append(added, allNodes[i])
@@ -1441,7 +1441,7 @@ func (nc *Controller) ReducedQPSFunc(nodeNum int) float32 {
 
 // addPodEvictorForNewZone checks if new zone appeared, and if so add new evictor.
 func (nc *Controller) addPodEvictorForNewZone(node *v1.Node) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0307")
+	klog.Info("[CONTINUUM] 0307")
 	nc.evictorLock.Lock()
 	defer nc.evictorLock.Unlock()
 	zone := nodetopology.GetZoneKey(node)
@@ -1466,7 +1466,7 @@ func (nc *Controller) addPodEvictorForNewZone(node *v1.Node) {
 // cancelPodEviction removes any queued evictions, typically because the node is available again. It
 // returns true if an eviction was queued.
 func (nc *Controller) cancelPodEviction(node *v1.Node) bool {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0308")
+	klog.Info("[CONTINUUM] 0308")
 	zone := nodetopology.GetZoneKey(node)
 	if !nc.nodeEvictionMap.setStatus(node.Name, unmarked) {
 		klog.V(2).Infof("node %v was unregistered in the meantime - skipping setting status", node.Name)
@@ -1487,7 +1487,7 @@ func (nc *Controller) cancelPodEviction(node *v1.Node) bool {
 //   - deletes pods immediately if node is already marked as evicted.
 //     Returns false, because the node wasn't added to the queue.
 func (nc *Controller) evictPods(ctx context.Context, node *v1.Node, pods []*v1.Pod) (bool, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0309")
+	klog.Info("[CONTINUUM] 0309")
 	status, ok := nc.nodeEvictionMap.getStatus(node.Name)
 	if ok && status == evicted {
 		// Node eviction already happened for this node.
@@ -1509,7 +1509,7 @@ func (nc *Controller) evictPods(ctx context.Context, node *v1.Node, pods []*v1.P
 }
 
 func (nc *Controller) markNodeForTainting(node *v1.Node, status v1.ConditionStatus) bool {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0310")
+	klog.Info("[CONTINUUM] 0310")
 	nc.evictorLock.Lock()
 	defer nc.evictorLock.Unlock()
 	if status == v1.ConditionFalse {
@@ -1528,7 +1528,7 @@ func (nc *Controller) markNodeForTainting(node *v1.Node, status v1.ConditionStat
 }
 
 func (nc *Controller) markNodeAsReachable(ctx context.Context, node *v1.Node) (bool, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0311")
+	klog.Info("[CONTINUUM] 0311")
 	err := controller.RemoveTaintOffNode(ctx, nc.kubeClient, node.Name, node, UnreachableTaintTemplate)
 	if err != nil {
 		klog.Errorf("Failed to remove taint from node %v: %v", node.Name, err)
@@ -1551,7 +1551,7 @@ func (nc *Controller) markNodeAsReachable(ctx context.Context, node *v1.Node) (b
 // - partiallyDisrupted if at least than nc.unhealthyZoneThreshold percent of Nodes are not Ready,
 // - normal otherwise
 func (nc *Controller) ComputeZoneState(nodeReadyConditions []*v1.NodeCondition) (int, ZoneState) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0312")
+	klog.Info("[CONTINUUM] 0312")
 	readyNodes := 0
 	notReadyNodes := 0
 	for i := range nodeReadyConditions {
@@ -1573,7 +1573,7 @@ func (nc *Controller) ComputeZoneState(nodeReadyConditions []*v1.NodeCondition) 
 
 // reconcileNodeLabels reconciles node labels.
 func (nc *Controller) reconcileNodeLabels(nodeName string) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0313")
+	klog.Info("[CONTINUUM] 0313")
 	node, err := nc.nodeLister.Get(nodeName)
 	if err != nil {
 		// If node not found, just ignore it.

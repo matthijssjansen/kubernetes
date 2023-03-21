@@ -121,7 +121,7 @@ const (
 
 // NewKubeletCommand creates a *cobra.Command object with default parameters
 func NewKubeletCommand() *cobra.Command {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0110")
+	klog.Info("[CONTINUUM] 0110")
 	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
 	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
 	kubeletFlags := options.NewKubeletFlags()
@@ -344,7 +344,7 @@ func kubeletConfigFlagPrecedence(kc *kubeletconfiginternal.KubeletConfiguration,
 }
 
 func loadConfigFile(name string) (*kubeletconfiginternal.KubeletConfiguration, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0111")
+	klog.Info("[CONTINUUM] 0111")
 	const errFmt = "failed to load Kubelet config file %s, error %v"
 	// compute absolute path based on current working dir
 	kubeletConfigFile, err := filepath.Abs(name)
@@ -411,7 +411,7 @@ func UnsecuredDependencies(s *options.KubeletServer, featureGate featuregate.Fea
 // Otherwise, the caller is assumed to have set up the Dependencies object and a default one will
 // not be generated.
 func Run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Dependencies, featureGate featuregate.FeatureGate) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0112")
+	klog.Info("[CONTINUUM] 0112")
 	// To help debugging, immediately log version
 	klog.InfoS("Kubelet version", "kubeletVersion", version.Get())
 
@@ -427,7 +427,7 @@ func Run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 }
 
 func setConfigz(cz *configz.Config, kc *kubeletconfiginternal.KubeletConfiguration) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0113")
+	klog.Info("[CONTINUUM] 0113")
 	scheme, _, err := kubeletscheme.NewSchemeAndCodecs()
 	if err != nil {
 		return err
@@ -455,7 +455,7 @@ func initConfigz(kc *kubeletconfiginternal.KubeletConfiguration) error {
 
 // makeEventRecorder sets up kubeDeps.Recorder if it's nil. It's a no-op otherwise.
 func makeEventRecorder(kubeDeps *kubelet.Dependencies, nodeName types.NodeName) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0114")
+	klog.Info("[CONTINUUM] 0114")
 	if kubeDeps.Recorder != nil {
 		return
 	}
@@ -493,7 +493,7 @@ func getReservedCPUs(machineInfo *cadvisorapi.MachineInfo, cpus string) (cpuset.
 }
 
 func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Dependencies, featureGate featuregate.FeatureGate) (err error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0116")
+	klog.Info("[CONTINUUM] 0116")
 	// Set global feature gates based on the value on the initial KubeletServer
 	err = utilfeature.DefaultMutableFeatureGate.SetFromMap(s.KubeletConfiguration.FeatureGates)
 	if err != nil {
@@ -810,7 +810,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 // buildKubeletClientConfig constructs the appropriate client config for the kubelet depending on whether
 // bootstrapping is enabled or client certificate rotation is enabled.
 func buildKubeletClientConfig(ctx context.Context, s *options.KubeletServer, tp oteltrace.TracerProvider, nodeName types.NodeName) (*restclient.Config, func(), error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0117")
+	klog.Info("[CONTINUUM] 0117")
 	if s.RotateCertificates {
 		// Rules for client rotation and the handling of kube config files:
 		//
@@ -945,7 +945,7 @@ func updateDialer(clientConfig *restclient.Config) (func(), error) {
 // if no certificate is available, or the most recent clientConfig (which is assumed to point to the cert that the manager will
 // write out).
 func buildClientCertificateManager(certConfig, clientConfig *restclient.Config, certDir string, nodeName types.NodeName) (certificate.Manager, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0118")
+	klog.Info("[CONTINUUM] 0118")
 	newClientsetFn := func(current *tls.Certificate) (clientset.Interface, error) {
 		// If we have a valid certificate, use that to fetch CSRs. Otherwise use the bootstrap
 		// credentials. In the future it would be desirable to change the behavior of bootstrap
@@ -984,7 +984,7 @@ func kubeClientConfigOverrides(s *options.KubeletServer, clientConfig *restclien
 // getNodeName returns the node name according to the cloud provider
 // if cloud provider is specified. Otherwise, returns the hostname of the node.
 func getNodeName(cloud cloudprovider.Interface, hostname string) (types.NodeName, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0119")
+	klog.Info("[CONTINUUM] 0119")
 	if cloud == nil {
 		return types.NodeName(hostname), nil
 	}
@@ -1104,7 +1104,7 @@ func setContentTypeForClient(cfg *restclient.Config, contentType string) {
 //
 // Eventually, #2 will be replaced with instances of #3
 func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencies, runOnce bool) error {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0120")
+	klog.Info("[CONTINUUM] 0120")
 	hostname, err := nodeutil.GetHostname(kubeServer.HostnameOverride)
 	if err != nil {
 		return err
@@ -1188,7 +1188,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 }
 
 func startKubelet(k kubelet.Bootstrap, podCfg *config.PodConfig, kubeCfg *kubeletconfiginternal.KubeletConfiguration, kubeDeps *kubelet.Dependencies, enableServer bool) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0121")
+	klog.Info("[CONTINUUM] 0121")
 	// start the kubelet
 	go k.Run(podCfg.Updates())
 
@@ -1212,7 +1212,7 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 	nodeIPs []net.IP) (k kubelet.Bootstrap, err error) {
 	// TODO: block until all sources have delivered at least one update to the channel, or break the sync loop
 	// up into "per source" synchronizations
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0122")
+	klog.Info("[CONTINUUM] 0122")
 	k, err = kubelet.NewMainKubelet(&kubeServer.KubeletConfiguration,
 		kubeDeps,
 		&kubeServer.ContainerRuntimeOptions,
@@ -1255,7 +1255,7 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 // parseResourceList parses the given configuration map into an API
 // ResourceList or returns an error.
 func parseResourceList(m map[string]string) (v1.ResourceList, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0123")
+	klog.Info("[CONTINUUM] 0123")
 	if len(m) == 0 {
 		return nil, nil
 	}

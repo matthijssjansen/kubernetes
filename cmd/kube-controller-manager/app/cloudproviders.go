@@ -18,7 +18,6 @@ package app
 
 import (
 	"fmt"
-	"time"
 
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/klog/v2"
@@ -32,7 +31,7 @@ import (
 // that the cloud providers need as parameters, so we can control
 func createCloudProvider(cloudProvider string, externalCloudVolumePlugin string, cloudConfigFile string,
 	allowUntaggedCloud bool, sharedInformers informers.SharedInformerFactory) (cloudprovider.Interface, ControllerLoopMode, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0080")
+	klog.Info("[CONTINUUM] 0080")
 	var cloud cloudprovider.Interface
 	var loopMode ControllerLoopMode
 	var err error

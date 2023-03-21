@@ -23,7 +23,6 @@ import (
 	rt "runtime"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/klog/v2"
@@ -72,7 +71,7 @@ type APIServerHandler struct {
 type HandlerChainBuilderFn func(apiHandler http.Handler) http.Handler
 
 func NewAPIServerHandler(name string, s runtime.NegotiatedSerializer, handlerChainBuilder HandlerChainBuilderFn, notFoundHandler http.Handler) *APIServerHandler {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0336")
+	klog.Info("[CONTINUUM] 0336")
 	nonGoRestfulMux := mux.NewPathRecorderMux(name)
 	if notFoundHandler != nil {
 		nonGoRestfulMux.NotFoundHandler(notFoundHandler)
@@ -104,7 +103,7 @@ func NewAPIServerHandler(name string, s runtime.NegotiatedSerializer, handlerCha
 
 // ListedPaths returns the paths that should be shown under /
 func (a *APIServerHandler) ListedPaths() []string {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0337")
+	klog.Info("[CONTINUUM] 0337")
 	var handledPaths []string
 	// Extract the paths handled using restful.WebService
 	for _, ws := range a.GoRestfulContainer.RegisteredWebServices() {
@@ -123,7 +122,7 @@ type director struct {
 }
 
 func (d director) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0338")
+	klog.Info("[CONTINUUM] 0338")
 	path := req.URL.Path
 
 	// check to see if our webservices want to claim this path
@@ -160,7 +159,7 @@ func (d director) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // TODO: Unify with RecoverPanics?
 func logStackOnRecover(s runtime.NegotiatedSerializer, panicReason interface{}, w http.ResponseWriter) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0339")
+	klog.Info("[CONTINUUM] 0339")
 	var buffer bytes.Buffer
 	buffer.WriteString(fmt.Sprintf("recover from panic situation: - %v\r\n", panicReason))
 	for i := 2; ; i++ {
@@ -180,7 +179,7 @@ func logStackOnRecover(s runtime.NegotiatedSerializer, panicReason interface{}, 
 }
 
 func serviceErrorHandler(s runtime.NegotiatedSerializer, serviceErr restful.ServiceError, request *restful.Request, resp *restful.Response) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0340")
+	klog.Info("[CONTINUUM] 0340")
 	responsewriters.ErrorNegotiated(
 		apierrors.NewGenericServerResponse(serviceErr.Code, "", schema.GroupResource{}, "", serviceErr.Message, 0, false),
 		s,

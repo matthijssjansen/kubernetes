@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"time"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
@@ -33,6 +32,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	authenticationclient "k8s.io/client-go/kubernetes/typed/authentication/v1"
 	authorizationclient "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	"k8s.io/klog/v2"
 
 	kubeletconfig "k8s.io/kubernetes/pkg/kubelet/apis/config"
 	"k8s.io/kubernetes/pkg/kubelet/server"
@@ -41,7 +41,7 @@ import (
 // BuildAuth creates an authenticator, an authorizer, and a matching authorizer attributes getter compatible with the kubelet's needs
 // It returns AuthInterface, a run method to start internal controllers (like cert reloading) and error.
 func BuildAuth(nodeName types.NodeName, client clientset.Interface, config kubeletconfig.KubeletConfiguration) (server.AuthInterface, func(<-chan struct{}), error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0106")
+	klog.Info("[CONTINUUM] 0106")
 	// Get clients, if provided
 	var (
 		tokenClient authenticationclient.AuthenticationV1Interface
@@ -69,7 +69,7 @@ func BuildAuth(nodeName types.NodeName, client clientset.Interface, config kubel
 
 // BuildAuthn creates an authenticator compatible with the kubelet's needs
 func BuildAuthn(client authenticationclient.AuthenticationV1Interface, authn kubeletconfig.KubeletAuthentication) (authenticator.Request, func(<-chan struct{}), error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0107")
+	klog.Info("[CONTINUUM] 0107")
 	var dynamicCAContentFromFile *dynamiccertificates.DynamicFileCAContent
 	var err error
 	if len(authn.X509.ClientCAFile) > 0 {
@@ -117,7 +117,7 @@ func BuildAuthn(client authenticationclient.AuthenticationV1Interface, authn kub
 
 // BuildAuthz creates an authorizer compatible with the kubelet's needs
 func BuildAuthz(client authorizationclient.AuthorizationV1Interface, authz kubeletconfig.KubeletAuthorization) (authorizer.Authorizer, error) {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0108")
+	klog.Info("[CONTINUUM] 0108")
 	switch authz.Mode {
 	case kubeletconfig.KubeletAuthorizationModeAlwaysAllow:
 		return authorizerfactory.NewAlwaysAllowAuthorizer(), nil

@@ -17,9 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
-	"time"
-
 	"k8s.io/component-base/cli"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd"
@@ -30,13 +27,13 @@ import (
 )
 
 func main() {
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0400 - KUBECTL START")
+	klog.Info("[CONTINUUM] 0400 - KUBECTL START")
 	klog.V(1).Infoln("kubectl command headers turned off")
 	command := cmd.NewDefaultKubectlCommand()
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0402 - KUBECTL COMMAND FORMED")
+	klog.Info("[CONTINUUM] 0402 - KUBECTL COMMAND FORMED")
 	if err := cli.RunNoErrOutput(command); err != nil {
 		// Pretty-print the error and exit with an error.
 		util.CheckErr(err)
 	}
-	fmt.Println(time.Now().UnixNano(), "[CONTINUUM] 0410 - KUBECTL FINISHED")
+	klog.Info("[CONTINUUM] 0410 - KUBECTL FINISHED")
 }
