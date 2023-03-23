@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -41,7 +42,6 @@ import (
 )
 
 func (sched *Scheduler) onStorageClassAdd(obj interface{}) {
-	klog.Info("[CONTINUUM] 0154")
 	sc, ok := obj.(*storagev1.StorageClass)
 	if !ok {
 		klog.ErrorS(nil, "Cannot convert to *storagev1.StorageClass", "obj", obj)
@@ -60,7 +60,6 @@ func (sched *Scheduler) onStorageClassAdd(obj interface{}) {
 }
 
 func (sched *Scheduler) addNodeToCache(obj interface{}) {
-	klog.Info("[CONTINUUM] 0155")
 	node, ok := obj.(*v1.Node)
 	if !ok {
 		klog.ErrorS(nil, "Cannot convert to *v1.Node", "obj", obj)
@@ -73,7 +72,6 @@ func (sched *Scheduler) addNodeToCache(obj interface{}) {
 }
 
 func (sched *Scheduler) updateNodeInCache(oldObj, newObj interface{}) {
-	klog.Info("[CONTINUUM] 0156")
 	oldNode, ok := oldObj.(*v1.Node)
 	if !ok {
 		klog.ErrorS(nil, "Cannot convert oldObj to *v1.Node", "oldObj", oldObj)
@@ -93,7 +91,6 @@ func (sched *Scheduler) updateNodeInCache(oldObj, newObj interface{}) {
 }
 
 func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
-	klog.Info("[CONTINUUM] 0157")
 	var node *v1.Node
 	switch t := obj.(type) {
 	case *v1.Node:
@@ -116,7 +113,7 @@ func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
 }
 
 func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
-	klog.Info("[CONTINUUM] 0124")
+	klog.Infof("%s [CONTINUUM] 0124 Add pod to scheduling queue", time.Now().UnixNano())
 	pod := obj.(*v1.Pod)
 	klog.V(3).InfoS("Add event for unscheduled pod", "pod", klog.KObj(pod))
 	if err := sched.SchedulingQueue.Add(pod); err != nil {
@@ -125,7 +122,6 @@ func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
 }
 
 func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
-	klog.Info("[CONTINUUM] 0158")
 	oldPod, newPod := oldObj.(*v1.Pod), newObj.(*v1.Pod)
 	// Bypass update event that carries identical objects; otherwise, a duplicated
 	// Pod may go through scheduling and cause unexpected behavior (see #96071).
@@ -147,7 +143,7 @@ func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
 }
 
 func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
-	klog.Info("[CONTINUUM] 0153")
+	klog.Infof("%s [CONTINUUM] 0153 Delete pod from scheduling queue", time.Now().UnixNano())
 	var pod *v1.Pod
 	switch t := obj.(type) {
 	case *v1.Pod:
@@ -183,7 +179,7 @@ func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
 }
 
 func (sched *Scheduler) addPodToCache(obj interface{}) {
-	klog.Info("[CONTINUUM] 0159")
+	klog.Infof("%s [CONTINUUM] 0159 Add pod to cache", time.Now().UnixNano())
 	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		klog.ErrorS(nil, "Cannot convert to *v1.Pod", "obj", obj)
@@ -199,7 +195,6 @@ func (sched *Scheduler) addPodToCache(obj interface{}) {
 }
 
 func (sched *Scheduler) updatePodInCache(oldObj, newObj interface{}) {
-	klog.Info("[CONTINUUM] 0160")
 	oldPod, ok := oldObj.(*v1.Pod)
 	if !ok {
 		klog.ErrorS(nil, "Cannot convert oldObj to *v1.Pod", "oldObj", oldObj)
@@ -220,7 +215,6 @@ func (sched *Scheduler) updatePodInCache(oldObj, newObj interface{}) {
 }
 
 func (sched *Scheduler) deletePodFromCache(obj interface{}) {
-	klog.Info("[CONTINUUM] 0161")
 	var pod *v1.Pod
 	switch t := obj.(type) {
 	case *v1.Pod:
@@ -262,7 +256,6 @@ func addAllEventHandlers(
 	dynInformerFactory dynamicinformer.DynamicSharedInformerFactory,
 	gvkMap map[framework.GVK]framework.ActionType,
 ) {
-	klog.Info("[CONTINUUM] 0161")
 	// scheduled pod cache
 	informerFactory.Core().V1().Pods().Informer().AddEventHandler(
 		cache.FilteringResourceEventHandler{
@@ -479,7 +472,6 @@ func nodeSpecUnschedulableChanged(newNode *v1.Node, oldNode *v1.Node) bool {
 }
 
 func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
-	klog.Info("[CONTINUUM] 0161")
 	// Note: the following checks doesn't take preemption into considerations, in very rare
 	// cases (e.g., node resizing), "pod" may still fail a check but preemption helps. We deliberately
 	// chose to ignore those cases as unschedulable pods will be re-queued eventually.
@@ -500,7 +492,6 @@ func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
 // It returns the first failure if `includeAllFailures` is set to false; otherwise
 // returns all failures.
 func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailures bool) []AdmissionResult {
-	klog.Info("[CONTINUUM] 0162")
 	var admissionResults []AdmissionResult
 	insufficientResources := noderesources.Fits(pod, nodeInfo)
 	if len(insufficientResources) != 0 {

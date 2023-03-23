@@ -175,7 +175,6 @@ func NewDisruptionControllerInternal(
 	clock clock.WithTicker,
 	stalePodDisruptionTimeout time.Duration,
 ) *DisruptionController {
-	klog.Info("[CONTINUUM] 0205")
 	dc := &DisruptionController{
 		kubeClient:                kubeClient,
 		queue:                     workqueue.NewRateLimitingQueueWithDelayingInterface(workqueue.NewDelayingQueueWithCustomClock(clock, "disruption"), workqueue.DefaultControllerRateLimiter()),
@@ -232,7 +231,6 @@ func NewDisruptionControllerInternal(
 // way to take advantage of listers with scale subresources, we use the workload
 // resources directly and only fall back to the scale subresource when needed.
 func (dc *DisruptionController) finders() []podControllerFinder {
-	klog.Info("[CONTINUUM] 0206")
 	return []podControllerFinder{dc.getPodReplicationController, dc.getPodDeployment, dc.getPodReplicaSet,
 		dc.getPodStatefulSet, dc.getScaleController}
 }
@@ -246,7 +244,6 @@ var (
 
 // getPodReplicaSet finds a replicaset which has no matching deployments.
 func (dc *DisruptionController) getPodReplicaSet(ctx context.Context, controllerRef *metav1.OwnerReference, namespace string) (*controllerAndScale, error) {
-	klog.Info("[CONTINUUM] 0207")
 	ok, err := verifyGroupKind(controllerRef, controllerKindRS.Kind, []string{"apps", "extensions"})
 	if !ok || err != nil {
 		return nil, err
@@ -269,7 +266,6 @@ func (dc *DisruptionController) getPodReplicaSet(ctx context.Context, controller
 
 // getPodStatefulSet returns the statefulset referenced by the provided controllerRef.
 func (dc *DisruptionController) getPodStatefulSet(ctx context.Context, controllerRef *metav1.OwnerReference, namespace string) (*controllerAndScale, error) {
-	klog.Info("[CONTINUUM] 0208")
 	ok, err := verifyGroupKind(controllerRef, controllerKindSS.Kind, []string{"apps"})
 	if !ok || err != nil {
 		return nil, err
@@ -288,7 +284,6 @@ func (dc *DisruptionController) getPodStatefulSet(ctx context.Context, controlle
 
 // getPodDeployments finds deployments for any replicasets which are being managed by deployments.
 func (dc *DisruptionController) getPodDeployment(ctx context.Context, controllerRef *metav1.OwnerReference, namespace string) (*controllerAndScale, error) {
-	klog.Info("[CONTINUUM] 0209")
 	ok, err := verifyGroupKind(controllerRef, controllerKindRS.Kind, []string{"apps", "extensions"})
 	if !ok || err != nil {
 		return nil, err
@@ -322,7 +317,6 @@ func (dc *DisruptionController) getPodDeployment(ctx context.Context, controller
 }
 
 func (dc *DisruptionController) getPodReplicationController(ctx context.Context, controllerRef *metav1.OwnerReference, namespace string) (*controllerAndScale, error) {
-	klog.Info("[CONTINUUM] 0210")
 	ok, err := verifyGroupKind(controllerRef, controllerKindRC.Kind, []string{""})
 	if !ok || err != nil {
 		return nil, err
@@ -339,7 +333,6 @@ func (dc *DisruptionController) getPodReplicationController(ctx context.Context,
 }
 
 func (dc *DisruptionController) getScaleController(ctx context.Context, controllerRef *metav1.OwnerReference, namespace string) (*controllerAndScale, error) {
-	klog.Info("[CONTINUUM] 0211")
 	gv, err := schema.ParseGroupVersion(controllerRef.APIVersion)
 	if err != nil {
 		return nil, err
@@ -379,7 +372,6 @@ func (dc *DisruptionController) getScaleController(ctx context.Context, controll
 }
 
 func (dc *DisruptionController) implementsScale(gvr schema.GroupVersionResource) (bool, error) {
-	klog.Info("[CONTINUUM] 0211")
 	resourceList, err := dc.discoveryClient.ServerResourcesForGroupVersion(gvr.GroupVersion().String())
 	if err != nil {
 		return false, err
@@ -403,7 +395,6 @@ func (dc *DisruptionController) implementsScale(gvr schema.GroupVersionResource)
 }
 
 func verifyGroupKind(controllerRef *metav1.OwnerReference, expectedKind string, expectedGroups []string) (bool, error) {
-	klog.Info("[CONTINUUM] 0212")
 	gv, err := schema.ParseGroupVersion(controllerRef.APIVersion)
 	if err != nil {
 		return false, err
@@ -423,7 +414,7 @@ func verifyGroupKind(controllerRef *metav1.OwnerReference, expectedKind string, 
 }
 
 func (dc *DisruptionController) Run(ctx context.Context) {
-	klog.Info("[CONTINUUM] 0213")
+	klog.Infof("%s [CONTINUUM] 0213", time.Now().UnixNano())
 	defer utilruntime.HandleCrash()
 
 	// Start events processing pipeline.
@@ -454,14 +445,12 @@ func (dc *DisruptionController) Run(ctx context.Context) {
 }
 
 func (dc *DisruptionController) addDb(obj interface{}) {
-	klog.Info("[CONTINUUM] 0214")
 	pdb := obj.(*policy.PodDisruptionBudget)
 	klog.V(4).Infof("add DB %q", pdb.Name)
 	dc.enqueuePdb(pdb)
 }
 
 func (dc *DisruptionController) updateDb(old, cur interface{}) {
-	klog.Info("[CONTINUUM] 0215")
 	// TODO(mml) ignore updates where 'old' is equivalent to 'cur'.
 	pdb := cur.(*policy.PodDisruptionBudget)
 	klog.V(4).Infof("update DB %q", pdb.Name)
@@ -469,7 +458,6 @@ func (dc *DisruptionController) updateDb(old, cur interface{}) {
 }
 
 func (dc *DisruptionController) removeDb(obj interface{}) {
-	klog.Info("[CONTINUUM] 0216")
 	pdb, ok := obj.(*policy.PodDisruptionBudget)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -488,7 +476,7 @@ func (dc *DisruptionController) removeDb(obj interface{}) {
 }
 
 func (dc *DisruptionController) addPod(obj interface{}) {
-	klog.Info("[CONTINUUM] 0217")
+	klog.Infof("%s [CONTINUUM] 0217", time.Now().UnixNano())
 	pod := obj.(*v1.Pod)
 	klog.V(4).Infof("addPod called on pod %q", pod.Name)
 	pdb := dc.getPdbForPod(pod)
@@ -504,7 +492,7 @@ func (dc *DisruptionController) addPod(obj interface{}) {
 }
 
 func (dc *DisruptionController) updatePod(_, cur interface{}) {
-	klog.Info("[CONTINUUM] 0218")
+	klog.Infof("%s [CONTINUUM] 0218", time.Now().UnixNano())
 	pod := cur.(*v1.Pod)
 	klog.V(4).Infof("updatePod called on pod %q", pod.Name)
 	pdb := dc.getPdbForPod(pod)
@@ -520,7 +508,7 @@ func (dc *DisruptionController) updatePod(_, cur interface{}) {
 }
 
 func (dc *DisruptionController) deletePod(obj interface{}) {
-	klog.Info("[CONTINUUM] 0219")
+	klog.Infof("%s [CONTINUUM] 0219", time.Now().UnixNano())
 	pod, ok := obj.(*v1.Pod)
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
@@ -550,7 +538,6 @@ func (dc *DisruptionController) deletePod(obj interface{}) {
 }
 
 func (dc *DisruptionController) enqueuePdb(pdb *policy.PodDisruptionBudget) {
-	klog.Info("[CONTINUUM] 0220")
 	key, err := controller.KeyFunc(pdb)
 	if err != nil {
 		klog.Errorf("Couldn't get key for PodDisruptionBudget object %+v: %v", pdb, err)
@@ -560,7 +547,6 @@ func (dc *DisruptionController) enqueuePdb(pdb *policy.PodDisruptionBudget) {
 }
 
 func (dc *DisruptionController) enqueuePdbForRecheck(pdb *policy.PodDisruptionBudget, delay time.Duration) {
-	klog.Info("[CONTINUUM] 0221")
 	key, err := controller.KeyFunc(pdb)
 	if err != nil {
 		klog.Errorf("Couldn't get key for PodDisruptionBudget object %+v: %v", pdb, err)
@@ -570,7 +556,6 @@ func (dc *DisruptionController) enqueuePdbForRecheck(pdb *policy.PodDisruptionBu
 }
 
 func (dc *DisruptionController) enqueueStalePodDisruptionCleanup(pod *v1.Pod, d time.Duration) {
-	klog.Info("[CONTINUUM] 0222")
 	key, err := controller.KeyFunc(pod)
 	if err != nil {
 		klog.ErrorS(err, "Couldn't get key for Pod object", "pod", klog.KObj(pod))
@@ -581,7 +566,7 @@ func (dc *DisruptionController) enqueueStalePodDisruptionCleanup(pod *v1.Pod, d 
 }
 
 func (dc *DisruptionController) getPdbForPod(pod *v1.Pod) *policy.PodDisruptionBudget {
-	klog.Info("[CONTINUUM] 0223")
+	klog.Infof("%s [CONTINUUM] 0223", time.Now().UnixNano())
 	// GetPodPodDisruptionBudgets returns an error only if no
 	// PodDisruptionBudgets are found.  We don't return that as an error to the
 	// caller.
@@ -602,7 +587,6 @@ func (dc *DisruptionController) getPdbForPod(pod *v1.Pod) *policy.PodDisruptionB
 // This function returns pods using the PodDisruptionBudget object.
 // IMPORTANT NOTE : the returned pods should NOT be modified.
 func (dc *DisruptionController) getPodsForPdb(pdb *policy.PodDisruptionBudget) ([]*v1.Pod, error) {
-	klog.Info("[CONTINUUM] 0224")
 	sel, err := metav1.LabelSelectorAsSelector(pdb.Spec.Selector)
 	if err != nil {
 		return []*v1.Pod{}, err
@@ -615,13 +599,11 @@ func (dc *DisruptionController) getPodsForPdb(pdb *policy.PodDisruptionBudget) (
 }
 
 func (dc *DisruptionController) worker(ctx context.Context) {
-	klog.Info("[CONTINUUM] 0225")
 	for dc.processNextWorkItem(ctx) {
 	}
 }
 
 func (dc *DisruptionController) processNextWorkItem(ctx context.Context) bool {
-	klog.Info("[CONTINUUM] 0226")
 	dKey, quit := dc.queue.Get()
 	if quit {
 		return false
@@ -641,13 +623,11 @@ func (dc *DisruptionController) processNextWorkItem(ctx context.Context) bool {
 }
 
 func (dc *DisruptionController) recheckWorker() {
-	klog.Info("[CONTINUUM] 0227")
 	for dc.processNextRecheckWorkItem() {
 	}
 }
 
 func (dc *DisruptionController) processNextRecheckWorkItem() bool {
-	klog.Info("[CONTINUUM] 0228")
 	dKey, quit := dc.recheckQueue.Get()
 	if quit {
 		return false
@@ -658,13 +638,11 @@ func (dc *DisruptionController) processNextRecheckWorkItem() bool {
 }
 
 func (dc *DisruptionController) stalePodDisruptionWorker(ctx context.Context) {
-	klog.Info("[CONTINUUM] 0229")
 	for dc.processNextStalePodDisruptionWorkItem(ctx) {
 	}
 }
 
 func (dc *DisruptionController) processNextStalePodDisruptionWorkItem(ctx context.Context) bool {
-	klog.Info("[CONTINUUM] 0230")
 	key, quit := dc.stalePodDisruptionQueue.Get()
 	if quit {
 		return false
@@ -681,7 +659,6 @@ func (dc *DisruptionController) processNextStalePodDisruptionWorkItem(ctx contex
 }
 
 func (dc *DisruptionController) sync(ctx context.Context, key string) error {
-	klog.Info("[CONTINUUM] 0231")
 	startTime := dc.clock.Now()
 	defer func() {
 		klog.V(4).Infof("Finished syncing PodDisruptionBudget %q (%v)", key, dc.clock.Since(startTime))
@@ -715,7 +692,6 @@ func (dc *DisruptionController) sync(ctx context.Context, key string) error {
 }
 
 func (dc *DisruptionController) trySync(ctx context.Context, pdb *policy.PodDisruptionBudget) error {
-	klog.Info("[CONTINUUM] 0232")
 	pods, err := dc.getPodsForPdb(pdb)
 	if err != nil {
 		dc.recorder.Eventf(pdb, v1.EventTypeWarning, "NoPods", "Failed to get pods: %v", err)
@@ -751,7 +727,6 @@ func (dc *DisruptionController) trySync(ctx context.Context, pdb *policy.PodDisr
 }
 
 func (dc *DisruptionController) syncStalePodDisruption(ctx context.Context, key string) error {
-	klog.Info("[CONTINUUM] 0233")
 	startTime := dc.clock.Now()
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -794,7 +769,6 @@ func (dc *DisruptionController) syncStalePodDisruption(ctx context.Context, key 
 }
 
 func (dc *DisruptionController) getExpectedPodCount(ctx context.Context, pdb *policy.PodDisruptionBudget, pods []*v1.Pod) (expectedCount, desiredHealthy int32, unmanagedPods []string, err error) {
-	klog.Info("[CONTINUUM] 0234")
 	err = nil
 	// TODO(davidopp): consider making the way expectedCount and rules about
 	// permitted controller configurations (specifically, considering it an error
@@ -837,7 +811,6 @@ func (dc *DisruptionController) getExpectedPodCount(ctx context.Context, pdb *po
 }
 
 func (dc *DisruptionController) getExpectedScale(ctx context.Context, pdb *policy.PodDisruptionBudget, pods []*v1.Pod) (expectedCount int32, unmanagedPods []string, err error) {
-	klog.Info("[CONTINUUM] 0235")
 	// When the user specifies a fraction of pods that must be available, we
 	// use as the fraction's denominator
 	// SUM_{all c in C} scale(c)
@@ -902,7 +875,6 @@ func (dc *DisruptionController) getExpectedScale(ctx context.Context, pdb *polic
 }
 
 func countHealthyPods(pods []*v1.Pod, disruptedPods map[string]metav1.Time, currentTime time.Time) (currentHealthy int32) {
-	klog.Info("[CONTINUUM] 0236")
 	for _, pod := range pods {
 		// Pod is being deleted.
 		if pod.DeletionTimestamp != nil {
@@ -923,7 +895,6 @@ func countHealthyPods(pods []*v1.Pod, disruptedPods map[string]metav1.Time, curr
 // Builds new PodDisruption map, possibly removing items that refer to non-existing, already deleted
 // or not-deleted at all items. Also returns an information when this check should be repeated.
 func (dc *DisruptionController) buildDisruptedPodMap(pods []*v1.Pod, pdb *policy.PodDisruptionBudget, currentTime time.Time) (map[string]metav1.Time, *time.Time) {
-	klog.Info("[CONTINUUM] 0237")
 	disruptedPods := pdb.Status.DisruptedPods
 	result := make(map[string]metav1.Time)
 	var recheckTime *time.Time
@@ -963,7 +934,6 @@ func (dc *DisruptionController) buildDisruptedPodMap(pods []*v1.Pod, pdb *policy
 // this field correctly, we will prevent the /evict handler from approving an
 // eviction when it may be unsafe to do so.
 func (dc *DisruptionController) failSafe(ctx context.Context, pdb *policy.PodDisruptionBudget, err error) error {
-	klog.Info("[CONTINUUM] 0238")
 	newPdb := pdb.DeepCopy()
 	newPdb.Status.DisruptionsAllowed = 0
 
@@ -983,7 +953,6 @@ func (dc *DisruptionController) failSafe(ctx context.Context, pdb *policy.PodDis
 
 func (dc *DisruptionController) updatePdbStatus(ctx context.Context, pdb *policy.PodDisruptionBudget, currentHealthy, desiredHealthy, expectedCount int32,
 	disruptedPods map[string]metav1.Time) error {
-	klog.Info("[CONTINUUM] 0239")
 
 	// We require expectedCount to be > 0 so that PDBs which currently match no
 	// pods are in a safe state when their first pods appear but this controller
@@ -1020,7 +989,6 @@ func (dc *DisruptionController) updatePdbStatus(ctx context.Context, pdb *policy
 }
 
 func (dc *DisruptionController) writePdbStatus(ctx context.Context, pdb *policy.PodDisruptionBudget) error {
-	klog.Info("[CONTINUUM] 0240")
 	// If this update fails, don't retry it. Allow the failure to get handled &
 	// retried in `processNextWorkItem()`.
 	_, err := dc.kubeClient.PolicyV1().PodDisruptionBudgets(pdb.Namespace).UpdateStatus(ctx, pdb, metav1.UpdateOptions{})
@@ -1028,7 +996,7 @@ func (dc *DisruptionController) writePdbStatus(ctx context.Context, pdb *policy.
 }
 
 func (dc *DisruptionController) nonTerminatingPodHasStaleDisruptionCondition(pod *v1.Pod) (bool, time.Duration) {
-	klog.Info("[CONTINUUM] 0241")
+	klog.Infof("%s [CONTINUUM] 0241", time.Now().UnixNano())
 	if pod.DeletionTimestamp != nil {
 		return false, 0
 	}

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"time"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
@@ -41,7 +42,7 @@ import (
 // BuildAuth creates an authenticator, an authorizer, and a matching authorizer attributes getter compatible with the kubelet's needs
 // It returns AuthInterface, a run method to start internal controllers (like cert reloading) and error.
 func BuildAuth(nodeName types.NodeName, client clientset.Interface, config kubeletconfig.KubeletConfiguration) (server.AuthInterface, func(<-chan struct{}), error) {
-	klog.Info("[CONTINUUM] 0106")
+	klog.Infof("%s [CONTINUUM] 0106", time.Now().UnixNano())
 	// Get clients, if provided
 	var (
 		tokenClient authenticationclient.AuthenticationV1Interface
@@ -69,7 +70,7 @@ func BuildAuth(nodeName types.NodeName, client clientset.Interface, config kubel
 
 // BuildAuthn creates an authenticator compatible with the kubelet's needs
 func BuildAuthn(client authenticationclient.AuthenticationV1Interface, authn kubeletconfig.KubeletAuthentication) (authenticator.Request, func(<-chan struct{}), error) {
-	klog.Info("[CONTINUUM] 0107")
+	klog.Infof("%s [CONTINUUM] 0107", time.Now().UnixNano())
 	var dynamicCAContentFromFile *dynamiccertificates.DynamicFileCAContent
 	var err error
 	if len(authn.X509.ClientCAFile) > 0 {
@@ -117,7 +118,7 @@ func BuildAuthn(client authenticationclient.AuthenticationV1Interface, authn kub
 
 // BuildAuthz creates an authorizer compatible with the kubelet's needs
 func BuildAuthz(client authorizationclient.AuthorizationV1Interface, authz kubeletconfig.KubeletAuthorization) (authorizer.Authorizer, error) {
-	klog.Info("[CONTINUUM] 0108")
+	klog.Infof("%s [CONTINUUM] 0108", time.Now().UnixNano())
 	switch authz.Mode {
 	case kubeletconfig.KubeletAuthorizationModeAlwaysAllow:
 		return authorizerfactory.NewAlwaysAllowAuthorizer(), nil

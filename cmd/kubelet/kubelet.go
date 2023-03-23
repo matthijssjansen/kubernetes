@@ -23,6 +23,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"k8s.io/component-base/cli"
 	_ "k8s.io/component-base/logs/json/register" // for JSON log format registration
@@ -33,7 +34,7 @@ import (
 )
 
 func main() {
-	klog.Info("[CONTINUUM] 0101")
+	klog.Infof("%s [CONTINUUM] 0101", time.Now().UnixNano())
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)
 	os.Exit(code)

@@ -90,7 +90,7 @@ func init() {
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
-	klog.Info("[CONTINUUM] 0047")
+	klog.Infof("%s [CONTINUUM] 0047", time.Now().UnixNano())
 	s := options.NewServerRunOptions()
 	cmd := &cobra.Command{
 		Use: "kube-apiserver",
@@ -158,7 +158,7 @@ cluster's shared state through which all other components interact.`,
 
 // Run runs the specified APIServer.  This should never exit.
 func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) error {
-	klog.Info("[CONTINUUM] 0048")
+	klog.Infof("%s [CONTINUUM] 0048", time.Now().UnixNano())
 	// To help debugging, immediately log version
 	klog.Infof("Version: %+v", version.Get())
 
@@ -179,7 +179,7 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 
 // CreateServerChain creates the apiservers connected via delegation.
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
-	klog.Info("[CONTINUUM] 0049")
+	klog.Infof("%s [CONTINUUM] 0049", time.Now().UnixNano())
 	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 
 // CreateKubeAPIServer creates and wires a workable kube-apiserver
 func CreateKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPIServer genericapiserver.DelegationTarget) (*controlplane.Instance, error) {
-	klog.Info("[CONTINUUM] 0051")
+	klog.Infof("%s [CONTINUUM] 0051", time.Now().UnixNano())
 	kubeAPIServer, err := kubeAPIServerConfig.Complete().New(delegateAPIServer)
 	if err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func CreateKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPISe
 
 // CreateProxyTransport creates the dialer infrastructure to connect to the nodes.
 func CreateProxyTransport() *http.Transport {
-	klog.Info("[CONTINUUM] 0050")
+	klog.Infof("%s [CONTINUUM] 0050", time.Now().UnixNano())
 	var proxyDialerFn utilnet.DialFunc
 	// Proxying to pods and services is IP-based... don't expect to be able to verify the hostname
 	proxyTLSClientConfig := &tls.Config{InsecureSkipVerify: true}
@@ -248,7 +248,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	[]admission.PluginInitializer,
 	error,
 ) {
-	klog.Info("[CONTINUUM] 0051")
+	klog.Infof("%s [CONTINUUM] 0051", time.Now().UnixNano())
 	proxyTransport := CreateProxyTransport()
 
 	genericConfig, versionedInformers, serviceResolver, pluginInitializers, admissionPostStartHook, storageFactory, err := buildGenericConfig(s.ServerRunOptions, proxyTransport)
@@ -370,7 +370,7 @@ func buildGenericConfig(
 	storageFactory *serverstorage.DefaultStorageFactory,
 	lastErr error,
 ) {
-	klog.Info("[CONTINUUM] 0052")
+	klog.Infof("%s [CONTINUUM] 0052", time.Now().UnixNano())
 	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)
 	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource()
 
@@ -503,7 +503,7 @@ func buildGenericConfig(
 
 // BuildAuthorizer constructs the authorizer
 func BuildAuthorizer(s *options.ServerRunOptions, EgressSelector *egressselector.EgressSelector, versionedInformers clientgoinformers.SharedInformerFactory) (authorizer.Authorizer, authorizer.RuleResolver, error) {
-	klog.Info("[CONTINUUM] 0053")
+	klog.Infof("%s [CONTINUUM] 0053", time.Now().UnixNano())
 	authorizationConfig := s.Authorization.ToAuthorizationConfig(versionedInformers)
 
 	if EgressSelector != nil {
@@ -519,7 +519,7 @@ func BuildAuthorizer(s *options.ServerRunOptions, EgressSelector *egressselector
 
 // BuildPriorityAndFairness constructs the guts of the API Priority and Fairness filter
 func BuildPriorityAndFairness(s *options.ServerRunOptions, extclient clientgoclientset.Interface, versionedInformer clientgoinformers.SharedInformerFactory) (utilflowcontrol.Interface, error) {
-	klog.Info("[CONTINUUM] 0054")
+	klog.Infof("%s [CONTINUUM] 0054", time.Now().UnixNano())
 	if s.GenericServerRunOptions.MaxRequestsInFlight+s.GenericServerRunOptions.MaxMutatingRequestsInFlight <= 0 {
 		return nil, fmt.Errorf("invalid configuration: MaxRequestsInFlight=%d and MaxMutatingRequestsInFlight=%d; they must add up to something positive", s.GenericServerRunOptions.MaxRequestsInFlight, s.GenericServerRunOptions.MaxMutatingRequestsInFlight)
 	}
@@ -539,7 +539,7 @@ type completedServerRunOptions struct {
 // Complete set default ServerRunOptions.
 // Should be called after kube-apiserver flags parsed.
 func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
-	klog.Info("[CONTINUUM] 0055")
+	klog.Infof("%s [CONTINUUM] 0055", time.Now().UnixNano())
 	var options completedServerRunOptions
 	// set defaults
 	if err := s.GenericServerRunOptions.DefaultAdvertiseAddress(s.SecureServing.SecureServingOptions); err != nil {
@@ -671,7 +671,7 @@ func buildServiceResolver(enabledAggregatorRouting bool, hostname string, inform
 }
 
 func getServiceIPAndRanges(serviceClusterIPRanges string) (net.IP, net.IPNet, net.IPNet, error) {
-	klog.Info("[CONTINUUM] 0056")
+	klog.Infof("%s [CONTINUUM] 0056", time.Now().UnixNano())
 	serviceClusterIPRangeList := []string{}
 	if serviceClusterIPRanges != "" {
 		serviceClusterIPRangeList = strings.Split(serviceClusterIPRanges, ",")

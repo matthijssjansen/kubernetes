@@ -21,6 +21,7 @@ import (
 	"fmt"
 	_ "net/http/pprof" // Enable pprof HTTP handlers.
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 
@@ -146,7 +147,7 @@ type KubeletFlags struct {
 
 // NewKubeletFlags will create a new KubeletFlags with default values
 func NewKubeletFlags() *KubeletFlags {
-	klog.Info("[CONTINUUM] 0102")
+	klog.Infof("%s [CONTINUUM] 0102", time.Now().UnixNano())
 	return &KubeletFlags{
 		ContainerRuntimeOptions: *NewContainerRuntimeOptions(),
 		CertDirectory:           "/var/lib/kubelet/pki",
@@ -162,7 +163,7 @@ func NewKubeletFlags() *KubeletFlags {
 
 // ValidateKubeletFlags validates Kubelet's configuration flags and returns an error if they are invalid.
 func ValidateKubeletFlags(f *KubeletFlags) error {
-	klog.Info("[CONTINUUM] 0103")
+	klog.Infof("%s [CONTINUUM] 0103", time.Now().UnixNano())
 	unknownLabels := sets.NewString()
 	invalidLabelErrs := make(map[string][]string)
 	for k, v := range f.NodeLabels {
@@ -256,7 +257,7 @@ type KubeletServer struct {
 
 // NewKubeletServer will create a new KubeletServer with default values.
 func NewKubeletServer() (*KubeletServer, error) {
-	klog.Info("[CONTINUUM] 0104")
+	klog.Infof("%s [CONTINUUM] 0104", time.Now().UnixNano())
 	config, err := NewKubeletConfiguration()
 	if err != nil {
 		return nil, err

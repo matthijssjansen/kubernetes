@@ -24,13 +24,11 @@ import (
 	"fmt"
 
 	"k8s.io/controller-manager/controller"
-	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/controller/cronjob"
 	"k8s.io/kubernetes/pkg/controller/job"
 )
 
 func startJobController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
-	klog.Info("[CONTINUUM] 0001")
 	go job.NewController(
 		controllerContext.InformerFactory.Core().V1().Pods(),
 		controllerContext.InformerFactory.Batch().V1().Jobs(),
@@ -40,7 +38,6 @@ func startJobController(ctx context.Context, controllerContext ControllerContext
 }
 
 func startCronJobController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
-	klog.Info("[CONTINUUM] 0002")
 	cj2c, err := cronjob.NewControllerV2(controllerContext.InformerFactory.Batch().V1().Jobs(),
 		controllerContext.InformerFactory.Batch().V1().CronJobs(),
 		controllerContext.ClientBuilder.ClientOrDie("cronjob-controller"),

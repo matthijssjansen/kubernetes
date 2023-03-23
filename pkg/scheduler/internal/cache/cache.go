@@ -391,7 +391,7 @@ func (cache *cacheImpl) FinishBinding(pod *v1.Pod) error {
 
 // finishBinding exists to make tests deterministic by injecting now as an argument
 func (cache *cacheImpl) finishBinding(pod *v1.Pod, now time.Time) error {
-	klog.Info("[CONTINUUM] 0151")
+	klog.Infof("%s [CONTINUUM] 0151", time.Now().UnixNano())
 	key, err := framework.GetPodKey(pod)
 	if err != nil {
 		return err

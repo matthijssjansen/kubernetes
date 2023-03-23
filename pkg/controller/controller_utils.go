@@ -164,7 +164,7 @@ type ControllerExpectations struct {
 
 // GetExpectations returns the ControlleeExpectations of the given controller.
 func (r *ControllerExpectations) GetExpectations(controllerKey string) (*ControlleeExpectations, bool, error) {
-	klog.Info("[CONTINUUM] 0259")
+	klog.Infof("%s [CONTINUUM] 0259", time.Now().UnixNano())
 	exp, exists, err := r.GetByKey(controllerKey)
 	if err == nil && exists {
 		return exp.(*ControlleeExpectations), true, nil
@@ -174,7 +174,7 @@ func (r *ControllerExpectations) GetExpectations(controllerKey string) (*Control
 
 // DeleteExpectations deletes the expectations of the given controller from the TTLStore.
 func (r *ControllerExpectations) DeleteExpectations(controllerKey string) {
-	klog.Info("[CONTINUUM] 0260")
+	klog.Infof("%s [CONTINUUM] 0260", time.Now().UnixNano())
 	if exp, exists, err := r.GetByKey(controllerKey); err == nil && exists {
 		if err := r.Delete(exp); err != nil {
 			klog.V(2).Infof("Error deleting expectations for controller %v: %v", controllerKey, err)
@@ -186,7 +186,7 @@ func (r *ControllerExpectations) DeleteExpectations(controllerKey string) {
 // Add/del counts are established by the controller at sync time, and updated as controllees are observed by the controller
 // manager.
 func (r *ControllerExpectations) SatisfiedExpectations(controllerKey string) bool {
-	klog.Info("[CONTINUUM] 0261")
+	klog.Infof("%s [CONTINUUM] 0261", time.Now().UnixNano())
 	if exp, exists, err := r.GetExpectations(controllerKey); exists {
 		if exp.Fulfilled() {
 			klog.V(4).Infof("Controller expectations fulfilled %#v", exp)
@@ -217,13 +217,13 @@ func (r *ControllerExpectations) SatisfiedExpectations(controllerKey string) boo
 // TODO: Make this possible to disable in tests.
 // TODO: Support injection of clock.
 func (exp *ControlleeExpectations) isExpired() bool {
-	klog.Info("[CONTINUUM] 0262")
+	klog.Infof("%s [CONTINUUM] 0262", time.Now().UnixNano())
 	return clock.RealClock{}.Since(exp.timestamp) > ExpectationsTimeout
 }
 
 // SetExpectations registers new expectations for the given controller. Forgets existing expectations.
 func (r *ControllerExpectations) SetExpectations(controllerKey string, add, del int) error {
-	klog.Info("[CONTINUUM] 0263")
+	klog.Infof("%s [CONTINUUM] 0263", time.Now().UnixNano())
 	exp := &ControlleeExpectations{add: int64(add), del: int64(del), key: controllerKey, timestamp: clock.RealClock{}.Now()}
 	klog.V(4).Infof("Setting expectations %#v", exp)
 	return r.Add(exp)
@@ -239,7 +239,7 @@ func (r *ControllerExpectations) ExpectDeletions(controllerKey string, dels int)
 
 // Decrements the expectation counts of the given controller.
 func (r *ControllerExpectations) LowerExpectations(controllerKey string, add, del int) {
-	klog.Info("[CONTINUUM] 0264")
+	klog.Infof("%s [CONTINUUM] 0264", time.Now().UnixNano())
 	if exp, exists, err := r.GetExpectations(controllerKey); err == nil && exists {
 		exp.Add(int64(-add), int64(-del))
 		// The expectations might've been modified since the update on the previous line.
@@ -249,7 +249,7 @@ func (r *ControllerExpectations) LowerExpectations(controllerKey string, add, de
 
 // Increments the expectation counts of the given controller.
 func (r *ControllerExpectations) RaiseExpectations(controllerKey string, add, del int) {
-	klog.Info("[CONTINUUM] 0265")
+	klog.Infof("%s [CONTINUUM] 0265", time.Now().UnixNano())
 	if exp, exists, err := r.GetExpectations(controllerKey); err == nil && exists {
 		exp.Add(int64(add), int64(del))
 		// The expectations might've been modified since the update on the previous line.
@@ -335,7 +335,7 @@ type UIDTrackingControllerExpectations struct {
 // The returned set is not thread safe, all modifications must be made holding
 // the uidStoreLock.
 func (u *UIDTrackingControllerExpectations) GetUIDs(controllerKey string) sets.String {
-	klog.Info("[CONTINUUM] 0267")
+	klog.Infof("%s [CONTINUUM] 0267", time.Now().UnixNano())
 	if uid, exists, err := u.uidStore.GetByKey(controllerKey); err == nil && exists {
 		return uid.(*UIDSet).String
 	}
@@ -344,7 +344,7 @@ func (u *UIDTrackingControllerExpectations) GetUIDs(controllerKey string) sets.S
 
 // ExpectDeletions records expectations for the given deleteKeys, against the given controller.
 func (u *UIDTrackingControllerExpectations) ExpectDeletions(rcKey string, deletedKeys []string) error {
-	klog.Info("[CONTINUUM] 0268")
+	klog.Infof("%s [CONTINUUM] 0268", time.Now().UnixNano())
 	expectedUIDs := sets.NewString()
 	for _, k := range deletedKeys {
 		expectedUIDs.Insert(k)
@@ -364,7 +364,7 @@ func (u *UIDTrackingControllerExpectations) ExpectDeletions(rcKey string, delete
 
 // DeletionObserved records the given deleteKey as a deletion, for the given rc.
 func (u *UIDTrackingControllerExpectations) DeletionObserved(rcKey, deleteKey string) {
-	klog.Info("[CONTINUUM] 0269")
+	klog.Infof("%s [CONTINUUM] 0269", time.Now().UnixNano())
 	u.uidStoreLock.Lock()
 	defer u.uidStoreLock.Unlock()
 
@@ -379,7 +379,7 @@ func (u *UIDTrackingControllerExpectations) DeletionObserved(rcKey, deleteKey st
 // DeleteExpectations deletes the UID set and invokes DeleteExpectations on the
 // underlying ControllerExpectationsInterface.
 func (u *UIDTrackingControllerExpectations) DeleteExpectations(rcKey string) {
-	klog.Info("[CONTINUUM] 0270")
+	klog.Infof("%s [CONTINUUM] 0270", time.Now().UnixNano())
 	u.uidStoreLock.Lock()
 	defer u.uidStoreLock.Unlock()
 
@@ -475,7 +475,7 @@ type RealPodControl struct {
 var _ PodControlInterface = &RealPodControl{}
 
 func getPodsLabelSet(template *v1.PodTemplateSpec) labels.Set {
-	klog.Info("[CONTINUUM] 0271")
+	klog.Infof("%s [CONTINUUM] 0271", time.Now().UnixNano())
 	desiredLabels := make(labels.Set)
 	for k, v := range template.Labels {
 		desiredLabels[k] = v
@@ -484,14 +484,14 @@ func getPodsLabelSet(template *v1.PodTemplateSpec) labels.Set {
 }
 
 func getPodsFinalizers(template *v1.PodTemplateSpec) []string {
-	klog.Info("[CONTINUUM] 0272")
+	klog.Infof("%s [CONTINUUM] 0272", time.Now().UnixNano())
 	desiredFinalizers := make([]string, len(template.Finalizers))
 	copy(desiredFinalizers, template.Finalizers)
 	return desiredFinalizers
 }
 
 func getPodsAnnotationSet(template *v1.PodTemplateSpec) labels.Set {
-	klog.Info("[CONTINUUM] 0273")
+	klog.Infof("%s [CONTINUUM] 0273", time.Now().UnixNano())
 	desiredAnnotations := make(labels.Set)
 	for k, v := range template.Annotations {
 		desiredAnnotations[k] = v
@@ -500,7 +500,7 @@ func getPodsAnnotationSet(template *v1.PodTemplateSpec) labels.Set {
 }
 
 func getPodsPrefix(controllerName string) string {
-	klog.Info("[CONTINUUM] 0274")
+	klog.Infof("%s [CONTINUUM] 0274", time.Now().UnixNano())
 	// use the dash (if the name isn't too long) to make the pod name a bit prettier
 	prefix := fmt.Sprintf("%s-", controllerName)
 	if len(validation.ValidatePodName(prefix, true)) != 0 {
@@ -510,7 +510,7 @@ func getPodsPrefix(controllerName string) string {
 }
 
 func validateControllerRef(controllerRef *metav1.OwnerReference) error {
-	klog.Info("[CONTINUUM] 0275")
+	klog.Infof("%s [CONTINUUM] 0275", time.Now().UnixNano())
 	if controllerRef == nil {
 		return fmt.Errorf("controllerRef is nil")
 	}
@@ -530,12 +530,12 @@ func validateControllerRef(controllerRef *metav1.OwnerReference) error {
 }
 
 func (r RealPodControl) CreatePods(ctx context.Context, namespace string, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference) error {
-	klog.Info("[CONTINUUM] 0276")
+	klog.Infof("%s [CONTINUUM] 0276", time.Now().UnixNano())
 	return r.CreatePodsWithGenerateName(ctx, namespace, template, controllerObject, controllerRef, "")
 }
 
 func (r RealPodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference, generateName string) error {
-	klog.Info("[CONTINUUM] 0277")
+	klog.Infof("%s [CONTINUUM] 0277", time.Now().UnixNano())
 	if err := validateControllerRef(controllerRef); err != nil {
 		return err
 	}
@@ -550,13 +550,13 @@ func (r RealPodControl) CreatePodsWithGenerateName(ctx context.Context, namespac
 }
 
 func (r RealPodControl) PatchPod(ctx context.Context, namespace, name string, data []byte) error {
-	klog.Info("[CONTINUUM] 0278")
+	klog.Infof("%s [CONTINUUM] 0278", time.Now().UnixNano())
 	_, err := r.KubeClient.CoreV1().Pods(namespace).Patch(ctx, name, types.StrategicMergePatchType, data, metav1.PatchOptions{})
 	return err
 }
 
 func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Object, controllerRef *metav1.OwnerReference) (*v1.Pod, error) {
-	klog.Info("[CONTINUUM] 0279")
+	klog.Infof("%s [CONTINUUM] 0279", time.Now().UnixNano())
 	desiredLabels := getPodsLabelSet(template)
 	desiredFinalizers := getPodsFinalizers(template)
 	desiredAnnotations := getPodsAnnotationSet(template)
@@ -582,7 +582,7 @@ func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Objec
 }
 
 func (r RealPodControl) createPods(ctx context.Context, namespace string, pod *v1.Pod, object runtime.Object) error {
-	klog.Info("[CONTINUUM] 0280")
+	klog.Infof("%s [CONTINUUM] 0280", time.Now().UnixNano())
 	if len(labels.Set(pod.Labels)) == 0 {
 		return fmt.Errorf("unable to create pods, no labels")
 	}
@@ -606,7 +606,7 @@ func (r RealPodControl) createPods(ctx context.Context, namespace string, pod *v
 }
 
 func (r RealPodControl) DeletePod(ctx context.Context, namespace string, podID string, object runtime.Object) error {
-	klog.Info("[CONTINUUM] 0281")
+	klog.Infof("%s [CONTINUUM] 0281", time.Now().UnixNano())
 	accessor, err := meta.Accessor(object)
 	if err != nil {
 		return fmt.Errorf("object does not have ObjectMeta, %v", err)
@@ -639,7 +639,7 @@ type FakePodControl struct {
 var _ PodControlInterface = &FakePodControl{}
 
 func (f *FakePodControl) PatchPod(ctx context.Context, namespace, name string, data []byte) error {
-	klog.Info("[CONTINUUM] 0282")
+	klog.Infof("%s [CONTINUUM] 0282", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.Patches = append(f.Patches, data)
@@ -650,12 +650,12 @@ func (f *FakePodControl) PatchPod(ctx context.Context, namespace, name string, d
 }
 
 func (f *FakePodControl) CreatePods(ctx context.Context, namespace string, spec *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference) error {
-	klog.Info("[CONTINUUM] 0283")
+	klog.Infof("%s [CONTINUUM] 0283", time.Now().UnixNano())
 	return f.CreatePodsWithGenerateName(ctx, namespace, spec, object, controllerRef, "")
 }
 
 func (f *FakePodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, spec *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference, generateNamePrefix string) error {
-	klog.Info("[CONTINUUM] 0284")
+	klog.Infof("%s [CONTINUUM] 0284", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.CreateCallCount++
@@ -672,7 +672,7 @@ func (f *FakePodControl) CreatePodsWithGenerateName(ctx context.Context, namespa
 }
 
 func (f *FakePodControl) DeletePod(ctx context.Context, namespace string, podID string, object runtime.Object) error {
-	klog.Info("[CONTINUUM] 0285")
+	klog.Infof("%s [CONTINUUM] 0285", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.DeletePodName = append(f.DeletePodName, podID)
@@ -683,7 +683,7 @@ func (f *FakePodControl) DeletePod(ctx context.Context, namespace string, podID 
 }
 
 func (f *FakePodControl) Clear() {
-	klog.Info("[CONTINUUM] 0286")
+	klog.Infof("%s [CONTINUUM] 0286", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.DeletePodName = []string{}

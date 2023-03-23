@@ -118,7 +118,7 @@ type ReplicaSetController struct {
 
 // NewReplicaSetController configures a replica set controller with the specified event recorder
 func NewReplicaSetController(rsInformer appsinformers.ReplicaSetInformer, podInformer coreinformers.PodInformer, kubeClient clientset.Interface, burstReplicas int) *ReplicaSetController {
-	klog.Info("[CONTINUUM] 0164")
+	klog.Infof("%s [CONTINUUM] 0164", time.Now().UnixNano())
 	eventBroadcaster := record.NewBroadcaster()
 	if err := metrics.Register(legacyregistry.Register); err != nil {
 		klog.ErrorS(err, "unable to register metrics")
@@ -139,7 +139,7 @@ func NewReplicaSetController(rsInformer appsinformers.ReplicaSetInformer, podInf
 // parameters so that it can also serve as the implementation of NewReplicationController.
 func NewBaseController(rsInformer appsinformers.ReplicaSetInformer, podInformer coreinformers.PodInformer, kubeClient clientset.Interface, burstReplicas int,
 	gvk schema.GroupVersionKind, metricOwnerName, queueName string, podControl controller.PodControlInterface, eventBroadcaster record.EventBroadcaster) *ReplicaSetController {
-	klog.Info("[CONTINUUM] 0165")
+	klog.Infof("%s [CONTINUUM] 0165", time.Now().UnixNano())
 	if kubeClient != nil && kubeClient.CoreV1().RESTClient().GetRateLimiter() != nil {
 		ratelimiter.RegisterMetricAndTrackRateLimiterUsage(metricOwnerName, kubeClient.CoreV1().RESTClient().GetRateLimiter())
 	}
@@ -194,7 +194,7 @@ func NewBaseController(rsInformer appsinformers.ReplicaSetInformer, podInformer 
 
 // Run begins watching and syncing.
 func (rsc *ReplicaSetController) Run(ctx context.Context, workers int) {
-	klog.Info("[CONTINUUM] 0166")
+	klog.Infof("%s [CONTINUUM] 0166", time.Now().UnixNano())
 	defer utilruntime.HandleCrash()
 
 	// Start events processing pipeline.
@@ -222,7 +222,7 @@ func (rsc *ReplicaSetController) Run(ctx context.Context, workers int) {
 // getReplicaSetsWithSameController returns a list of ReplicaSets with the same
 // owner as the given ReplicaSet.
 func (rsc *ReplicaSetController) getReplicaSetsWithSameController(rs *apps.ReplicaSet) []*apps.ReplicaSet {
-	klog.Info("[CONTINUUM] 0167")
+	klog.Infof("%s [CONTINUUM] 0167", time.Now().UnixNano())
 	controllerRef := metav1.GetControllerOf(rs)
 	if controllerRef == nil {
 		utilruntime.HandleError(fmt.Errorf("ReplicaSet has no controller: %v", rs))
@@ -250,7 +250,7 @@ func (rsc *ReplicaSetController) getReplicaSetsWithSameController(rs *apps.Repli
 
 // getPodReplicaSets returns a list of ReplicaSets matching the given pod.
 func (rsc *ReplicaSetController) getPodReplicaSets(pod *v1.Pod) []*apps.ReplicaSet {
-	klog.Info("[CONTINUUM] 0168")
+	klog.Infof("%s [CONTINUUM] 0168", time.Now().UnixNano())
 	rss, err := rsc.rsLister.GetPodReplicaSets(pod)
 	if err != nil {
 		return nil
@@ -267,7 +267,6 @@ func (rsc *ReplicaSetController) getPodReplicaSets(pod *v1.Pod) []*apps.ReplicaS
 // or nil if the ControllerRef could not be resolved to a matching controller
 // of the correct Kind.
 func (rsc *ReplicaSetController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *apps.ReplicaSet {
-	klog.Info("[CONTINUUM] 0169")
 	// We can't look up by UID, so look up by Name and then verify UID.
 	// Don't even try to look up by Name if it's the wrong Kind.
 	if controllerRef.Kind != rsc.Kind {
@@ -286,7 +285,7 @@ func (rsc *ReplicaSetController) resolveControllerRef(namespace string, controll
 }
 
 func (rsc *ReplicaSetController) enqueueRS(rs *apps.ReplicaSet) {
-	klog.Info("[CONTINUUM] 0170")
+	klog.Infof("%s [CONTINUUM] 0170", time.Now().UnixNano())
 	key, err := controller.KeyFunc(rs)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %#v: %v", rs, err))
@@ -297,7 +296,7 @@ func (rsc *ReplicaSetController) enqueueRS(rs *apps.ReplicaSet) {
 }
 
 func (rsc *ReplicaSetController) enqueueRSAfter(rs *apps.ReplicaSet, duration time.Duration) {
-	klog.Info("[CONTINUUM] 0171")
+	klog.Infof("%s [CONTINUUM] 0171", time.Now().UnixNano())
 	key, err := controller.KeyFunc(rs)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %#v: %v", rs, err))
@@ -308,7 +307,7 @@ func (rsc *ReplicaSetController) enqueueRSAfter(rs *apps.ReplicaSet, duration ti
 }
 
 func (rsc *ReplicaSetController) addRS(obj interface{}) {
-	klog.Info("[CONTINUUM] 0172")
+	klog.Infof("%s [CONTINUUM] 0172", time.Now().UnixNano())
 	rs := obj.(*apps.ReplicaSet)
 	klog.V(4).Infof("Adding %s %s/%s", rsc.Kind, rs.Namespace, rs.Name)
 	rsc.enqueueRS(rs)
@@ -316,7 +315,7 @@ func (rsc *ReplicaSetController) addRS(obj interface{}) {
 
 // callback when RS is updated
 func (rsc *ReplicaSetController) updateRS(old, cur interface{}) {
-	klog.Info("[CONTINUUM] 0173")
+	klog.Infof("%s [CONTINUUM] 0173", time.Now().UnixNano())
 	oldRS := old.(*apps.ReplicaSet)
 	curRS := cur.(*apps.ReplicaSet)
 
@@ -352,7 +351,7 @@ func (rsc *ReplicaSetController) updateRS(old, cur interface{}) {
 }
 
 func (rsc *ReplicaSetController) deleteRS(obj interface{}) {
-	klog.Info("[CONTINUUM] 0174")
+	klog.Infof("%s [CONTINUUM] 0174", time.Now().UnixNano())
 	rs, ok := obj.(*apps.ReplicaSet)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -383,7 +382,7 @@ func (rsc *ReplicaSetController) deleteRS(obj interface{}) {
 
 // When a pod is created, enqueue the replica set that manages it and update its expectations.
 func (rsc *ReplicaSetController) addPod(obj interface{}) {
-	klog.Info("[CONTINUUM] 0163")
+	klog.Infof("%s [CONTINUUM] 0163", time.Now().UnixNano())
 	pod := obj.(*v1.Pod)
 
 	if pod.DeletionTimestamp != nil {
@@ -427,7 +426,6 @@ func (rsc *ReplicaSetController) addPod(obj interface{}) {
 // up. If the labels of the pod have changed we need to awaken both the old
 // and new replica set. old and cur must be *v1.Pod types.
 func (rsc *ReplicaSetController) updatePod(old, cur interface{}) {
-	klog.Info("[CONTINUUM] 0175")
 	curPod := cur.(*v1.Pod)
 	oldPod := old.(*v1.Pod)
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
@@ -502,7 +500,7 @@ func (rsc *ReplicaSetController) updatePod(old, cur interface{}) {
 // When a pod is deleted, enqueue the replica set that manages the pod and update its expectations.
 // obj could be an *v1.Pod, or a DeletionFinalStateUnknown marker item.
 func (rsc *ReplicaSetController) deletePod(obj interface{}) {
-	klog.Info("[CONTINUUM] 0176")
+	klog.Infof("%s [CONTINUUM] 0176", time.Now().UnixNano())
 	pod, ok := obj.(*v1.Pod)
 
 	// When a delete is dropped, the relist will notice a pod in the store not
@@ -544,13 +542,13 @@ func (rsc *ReplicaSetController) deletePod(obj interface{}) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (rsc *ReplicaSetController) worker(ctx context.Context) {
-	klog.Info("[CONTINUUM] 0177")
+	klog.Infof("%s [CONTINUUM] 0177", time.Now().UnixNano())
 	for rsc.processNextWorkItem(ctx) {
 	}
 }
 
 func (rsc *ReplicaSetController) processNextWorkItem(ctx context.Context) bool {
-	klog.Info("[CONTINUUM] 0178")
+	klog.Infof("%s [CONTINUUM] 0178", time.Now().UnixNano())
 	key, quit := rsc.queue.Get()
 	if quit {
 		return false
@@ -573,7 +571,7 @@ func (rsc *ReplicaSetController) processNextWorkItem(ctx context.Context) bool {
 // Does NOT modify <filteredPods>.
 // It will requeue the replica set in case of an error while creating/deleting pods.
 func (rsc *ReplicaSetController) manageReplicas(ctx context.Context, filteredPods []*v1.Pod, rs *apps.ReplicaSet) error {
-	klog.Info("[CONTINUUM] 0179")
+	klog.Infof("%s [CONTINUUM] 0179", time.Now().UnixNano())
 	diff := len(filteredPods) - int(*(rs.Spec.Replicas))
 	rsKey, err := controller.KeyFunc(rs)
 	if err != nil {
@@ -679,7 +677,7 @@ func (rsc *ReplicaSetController) manageReplicas(ctx context.Context, filteredPod
 // meaning it did not expect to see any more of its pods created or deleted. This function is not meant to be
 // invoked concurrently with the same key.
 func (rsc *ReplicaSetController) syncReplicaSet(ctx context.Context, key string) error {
-	klog.Info("[CONTINUUM] 0180")
+	klog.Infof("%s [CONTINUUM] 0180", time.Now().UnixNano())
 	startTime := time.Now()
 	defer func() {
 		klog.V(4).Infof("Finished syncing %v %q (%v)", rsc.Kind, key, time.Since(startTime))
@@ -747,7 +745,7 @@ func (rsc *ReplicaSetController) syncReplicaSet(ctx context.Context, key string)
 }
 
 func (rsc *ReplicaSetController) claimPods(ctx context.Context, rs *apps.ReplicaSet, selector labels.Selector, filteredPods []*v1.Pod) ([]*v1.Pod, error) {
-	klog.Info("[CONTINUUM] 0181")
+	klog.Infof("%s [CONTINUUM] 0181", time.Now().UnixNano())
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func(ctx context.Context) (metav1.Object, error) {
@@ -776,7 +774,7 @@ func (rsc *ReplicaSetController) claimPods(ctx context.Context, rs *apps.Replica
 //
 // It returns the number of successful calls to the function.
 func slowStartBatch(count int, initialBatchSize int, fn func() error) (int, error) {
-	klog.Info("[CONTINUUM] 0182")
+	klog.Infof("%s [CONTINUUM] 0182", time.Now().UnixNano())
 	remaining := count
 	successes := 0
 	for batchSize := integer.IntMin(remaining, initialBatchSize); batchSize > 0; batchSize = integer.IntMin(2*batchSize, remaining) {
@@ -805,7 +803,7 @@ func slowStartBatch(count int, initialBatchSize int, fn func() error) (int, erro
 // getIndirectlyRelatedPods returns all pods that are owned by any ReplicaSet
 // that is owned by the given ReplicaSet's owner.
 func (rsc *ReplicaSetController) getIndirectlyRelatedPods(rs *apps.ReplicaSet) ([]*v1.Pod, error) {
-	klog.Info("[CONTINUUM] 0183")
+	klog.Infof("%s [CONTINUUM] 0183", time.Now().UnixNano())
 	var relatedPods []*v1.Pod
 	seen := make(map[types.UID]*apps.ReplicaSet)
 	for _, relatedRS := range rsc.getReplicaSetsWithSameController(rs) {
@@ -832,7 +830,7 @@ func (rsc *ReplicaSetController) getIndirectlyRelatedPods(rs *apps.ReplicaSet) (
 }
 
 func getPodsToDelete(filteredPods, relatedPods []*v1.Pod, diff int) []*v1.Pod {
-	klog.Info("[CONTINUUM] 0184")
+	klog.Infof("%s [CONTINUUM] 0184", time.Now().UnixNano())
 	// No need to sort pods if we are about to delete all of them.
 	// diff will always be <= len(filteredPods), so not need to handle > case.
 	if diff < len(filteredPods) {
@@ -844,7 +842,7 @@ func getPodsToDelete(filteredPods, relatedPods []*v1.Pod, diff int) []*v1.Pod {
 }
 
 func reportSortingDeletionAgeRatioMetric(filteredPods []*v1.Pod, diff int) {
-	klog.Info("[CONTINUUM] 0185")
+	klog.Infof("%s [CONTINUUM] 0185", time.Now().UnixNano())
 	now := time.Now()
 	youngestTime := time.Time{}
 	// first we need to check all of the ready pods to get the youngest, as they may not necessarily be sorted by timestamp alone
@@ -869,7 +867,7 @@ func reportSortingDeletionAgeRatioMetric(filteredPods []*v1.Pod, diff int) {
 // active pods in relatedPods that are colocated on the same node with the pod.
 // relatedPods generally should be a superset of podsToRank.
 func getPodsRankedByRelatedPodsOnSameNode(podsToRank, relatedPods []*v1.Pod) controller.ActivePodsWithRanks {
-	klog.Info("[CONTINUUM] 0186")
+	klog.Infof("%s [CONTINUUM] 0186", time.Now().UnixNano())
 	podsOnNode := make(map[string]int)
 	for _, pod := range relatedPods {
 		if controller.IsPodActive(pod) {

@@ -22,6 +22,7 @@ package main
 
 import (
 	"os"
+	"time"
 	_ "time/tzdata" // for CronJob Time Zone support
 
 	"k8s.io/component-base/cli"
@@ -33,7 +34,7 @@ import (
 )
 
 func main() {
-	klog.Info("[CONTINUUM] 0057")
+	klog.Infof("%s [CONTINUUM] 0057", time.Now().UnixNano())
 	command := app.NewControllerManagerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

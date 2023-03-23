@@ -105,7 +105,6 @@ func WithLogging(handler http.Handler, pred StacktracePred) http.Handler {
 }
 
 func withLogging(handler http.Handler, stackTracePred StacktracePred, shouldLogRequest ShouldLogRequestPred) http.Handler {
-	klog.Info("[CONTINUUM] 0354")
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if !shouldLogRequest() {
 			handler.ServeHTTP(w, req)
@@ -239,7 +238,7 @@ func SetStacktracePredicate(ctx context.Context, pred StacktracePred) {
 
 // Log is intended to be called once at the end of your request handler, via defer
 func (rl *respLogger) Log() {
-	klog.Info("[CONTINUUM] 0355")
+	klog.Infof("%s [CONTINUUM] 0355", time.Now().UnixNano())
 	latency := time.Since(rl.startTime)
 	auditID := request.GetAuditIDTruncated(rl.req.Context())
 
@@ -289,13 +288,13 @@ func (rl *respLogger) Log() {
 
 // Header implements http.ResponseWriter.
 func (rl *respLogger) Header() http.Header {
-	klog.Info("[CONTINUUM] 0356")
+	klog.Infof("%s [CONTINUUM] 0356", time.Now().UnixNano())
 	return rl.w.Header()
 }
 
 // Write implements http.ResponseWriter.
 func (rl *respLogger) Write(b []byte) (int, error) {
-	klog.Info("[CONTINUUM] 0357")
+	klog.Infof("%s [CONTINUUM] 0357", time.Now().UnixNano())
 	if !rl.statusRecorded {
 		rl.recordStatus(http.StatusOK) // Default if WriteHeader hasn't been called
 	}
@@ -307,7 +306,7 @@ func (rl *respLogger) Write(b []byte) (int, error) {
 
 // WriteHeader implements http.ResponseWriter.
 func (rl *respLogger) WriteHeader(status int) {
-	klog.Info("[CONTINUUM] 0358")
+	klog.Infof("%s [CONTINUUM] 0358", time.Now().UnixNano())
 	rl.recordStatus(status)
 	rl.w.WriteHeader(status)
 }

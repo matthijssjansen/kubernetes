@@ -951,7 +951,7 @@ func NewPodNominator(podLister listersv1.PodLister) framework.PodNominator {
 // MakeNextPodFunc returns a function to retrieve the next pod from a given
 // scheduling queue
 func MakeNextPodFunc(queue SchedulingQueue) func() *framework.QueuedPodInfo {
-	klog.Info("[CONTINUUM] 0125")
+	klog.Infof("%s [CONTINUUM] 0125", time.Now().UnixNano())
 	return func() *framework.QueuedPodInfo {
 		podInfo, err := queue.Pop()
 		if err == nil {

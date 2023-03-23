@@ -17,6 +17,8 @@ limitations under the License.
 package options
 
 import (
+	"time"
+
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/kubelet/config"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
@@ -36,7 +38,7 @@ var (
 // NewContainerRuntimeOptions will create a new ContainerRuntimeOptions with
 // default values.
 func NewContainerRuntimeOptions() *config.ContainerRuntimeOptions {
-	klog.Info("[CONTINUUM] 0105")
+	klog.Infof("%s [CONTINUUM] 0105", time.Now().UnixNano())
 	return &config.ContainerRuntimeOptions{
 		ContainerRuntime: kubetypes.RemoteContainerRuntime,
 		PodSandboxImage:  defaultPodSandboxImage,

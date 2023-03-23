@@ -17,6 +17,8 @@ limitations under the License.
 package app
 
 import (
+	"time"
+
 	"k8s.io/klog/v2"
 	"k8s.io/utils/inotify"
 
@@ -24,7 +26,7 @@ import (
 )
 
 func watchForLockfileContention(path string, done chan struct{}) error {
-	klog.Info("[CONTINUUM] 0109")
+	klog.Infof("%s [CONTINUUM] 0109", time.Now().UnixNano())
 	watcher, err := inotify.NewWatcher()
 	if err != nil {
 		klog.ErrorS(err, "Unable to create watcher for lockfile")
