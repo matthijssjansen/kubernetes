@@ -254,7 +254,7 @@ func (jm *Controller) resolveControllerRef(namespace string, controllerRef *meta
 
 // When a pod is created, enqueue the controller that manages it and update its expectations.
 func (jm *Controller) addPod(obj interface{}) {
-	klog.Infof("%s [CONTINUUM] 0012", time.Now().UnixNano())
+	klog.Infof("%s [CONTINUUM] 0012 AFTER HANDLER addPod", time.Now().UnixNano())
 	pod := obj.(*v1.Pod)
 	if pod.DeletionTimestamp != nil {
 		// on a restart of the controller, it's possible a new pod shows up in a state that

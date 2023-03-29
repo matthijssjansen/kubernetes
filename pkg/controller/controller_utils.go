@@ -83,7 +83,7 @@ const (
 	//      min(N,SlowStartInitialBatchSize)
 	// The number of batches is given by:
 	//      1+floor(log_2(ceil(N/SlowStartInitialBatchSize)))
-	SlowStartInitialBatchSize = 1
+	SlowStartInitialBatchSize = 1000000
 )
 
 var UpdateTaintBackoff = wait.Backoff{
@@ -582,11 +582,12 @@ func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Objec
 }
 
 func (r RealPodControl) createPods(ctx context.Context, namespace string, pod *v1.Pod, object runtime.Object) error {
-	klog.Infof("%s [CONTINUUM] 0280", time.Now().UnixNano())
+	klog.Infof("%s [CONTINUUM] 0280 BEFORE POD POST", time.Now().UnixNano())
 	if len(labels.Set(pod.Labels)) == 0 {
 		return fmt.Errorf("unable to create pods, no labels")
 	}
 	newPod, err := r.KubeClient.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
+	klog.Infof("%s [CONTINUUM] 0281 AFTER POD POST", time.Now().UnixNano())
 	if err != nil {
 		// only send an event if the namespace isn't terminating
 		if !apierrors.HasStatusCause(err, v1.NamespaceTerminatingCause) {
@@ -606,7 +607,6 @@ func (r RealPodControl) createPods(ctx context.Context, namespace string, pod *v
 }
 
 func (r RealPodControl) DeletePod(ctx context.Context, namespace string, podID string, object runtime.Object) error {
-	klog.Infof("%s [CONTINUUM] 0281", time.Now().UnixNano())
 	accessor, err := meta.Accessor(object)
 	if err != nil {
 		return fmt.Errorf("object does not have ObjectMeta, %v", err)

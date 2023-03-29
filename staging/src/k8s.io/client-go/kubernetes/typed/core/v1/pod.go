@@ -31,6 +31,8 @@ import (
 	corev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	scheme "k8s.io/client-go/kubernetes/scheme"
 	rest "k8s.io/client-go/rest"
+
+	"k8s.io/klog/v2"
 )
 
 // PodsGetter has a method to return a PodInterface.
@@ -119,6 +121,7 @@ func (c *pods) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interf
 // Create takes the representation of a pod and creates it.  Returns the server's representation of the pod, and an error, if there is any.
 func (c *pods) Create(ctx context.Context, pod *v1.Pod, opts metav1.CreateOptions) (result *v1.Pod, err error) {
 	result = &v1.Pod{}
+	klog.Infof("%s [CONTINUUM] 0352 RIGHT BEFORE POST", time.Now().UnixNano())
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("pods").
@@ -126,6 +129,8 @@ func (c *pods) Create(ctx context.Context, pod *v1.Pod, opts metav1.CreateOption
 		Body(pod).
 		Do(ctx).
 		Into(result)
+	
+	klog.Infof("%s [CONTINUUM] 0353 RIGHT AFTER POST", time.Now().UnixNano())
 	return
 }
 
