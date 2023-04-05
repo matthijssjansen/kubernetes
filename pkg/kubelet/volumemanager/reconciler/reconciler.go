@@ -225,10 +225,13 @@ func (rc *reconciler) mountOrAttachVolumes() {
 			// TODO: report error better, this may be too noisy
 			rc.desiredStateOfWorld.AddErrorToPod(volumeToMount.PodName, err.Error())
 		} else if cache.IsVolumeNotAttachedError(err) {
+			klog.Infof("%s [CONTINUUM] 0320 waitforvolumeattach", time.Now().UnixNano())
 			rc.waitForVolumeAttach(volumeToMount)
 		} else if !volMounted || cache.IsRemountRequiredError(err) {
+			klog.Infof("%s [CONTINUUM] 0321 mountattachedvolumes", time.Now().UnixNano())
 			rc.mountAttachedVolumes(volumeToMount, err)
 		} else if cache.IsFSResizeRequiredError(err) {
+			klog.Infof("%s [CONTINUUM] 0322 waitforvolumeattach", time.Now().UnixNano())
 			fsResizeRequiredErr, _ := err.(cache.FsResizeRequiredError)
 			rc.expandVolume(volumeToMount, fsResizeRequiredErr.CurrentSize)
 		}
@@ -354,6 +357,7 @@ func (rc *reconciler) waitForVolumeAttach(volumeToMount cache.VolumeToMount) {
 			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.VerifyControllerAttachedVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
 		}
 		if err == nil {
+			klog.Infof("%s [CONTINUUM] 0330 waitForVolumeAttach pod=%s", time.Now().UnixNano(), klog.KObj(volumeToMount.Pod))
 			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
 		}
 	} else {
@@ -421,7 +425,9 @@ func (rc *reconciler) unmountDetachDevices() {
 // it will try to clean up the mount paths with operation executor.
 func (rc *reconciler) sync() {
 	defer rc.updateLastSyncTime()
+	klog.Infof("%s [CONTINUUM] 0327 Before syncStates", time.Now().UnixNano())
 	rc.syncStates(rc.kubeletPodsDir)
+	klog.Infof("%s [CONTINUUM] 0328 After syncStates", time.Now().UnixNano())
 }
 
 func (rc *reconciler) updateLastSyncTime() {
