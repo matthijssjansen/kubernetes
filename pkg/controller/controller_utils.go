@@ -631,6 +631,7 @@ func (f *FakePodControl) CreatePods(ctx context.Context, namespace string, spec 
 }
 
 func (f *FakePodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, spec *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference, generateNamePrefix string) error {
+	klog.Infof("%s [CONTINUUM] 0277", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.CreateCallCount++
