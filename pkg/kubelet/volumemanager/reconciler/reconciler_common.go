@@ -255,6 +255,7 @@ func (rc *reconciler) waitForVolumeAttach(volumeToMount cache.VolumeToMount) {
 			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.VerifyControllerAttachedVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
 		}
 		if err == nil {
+			klog.Infof("%s [CONTINUUM] 0330 waitForVolumeAttach pod=%s", time.Now().UnixNano(), klog.KObj(volumeToMount.Pod))
 			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
 		}
 	} else {
