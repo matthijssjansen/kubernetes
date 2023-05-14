@@ -518,6 +518,7 @@ func (r RealPodControl) CreatePods(ctx context.Context, namespace string, templa
 }
 
 func (r RealPodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference, generateName string) error {
+	klog.Infof("%s [CONTINUUM] 0277", time.Now().UnixNano())
 	if err := validateControllerRef(controllerRef); err != nil {
 		return err
 	}
@@ -631,7 +632,6 @@ func (f *FakePodControl) CreatePods(ctx context.Context, namespace string, spec 
 }
 
 func (f *FakePodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, spec *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference, generateNamePrefix string) error {
-	klog.Infof("%s [CONTINUUM] 0277", time.Now().UnixNano())
 	f.Lock()
 	defer f.Unlock()
 	f.CreateCallCount++
