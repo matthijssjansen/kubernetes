@@ -174,8 +174,6 @@ func ResyncPeriod(c *config.CompletedConfig) func() time.Duration {
 
 // Run runs the KubeControllerManagerOptions.
 func Run(c *config.CompletedConfig, stopCh <-chan struct{}) error {
-	klog.Infof("%s [CONTINUUM] 0028", time.Now().UnixNano())
-
 	// To help debugging, immediately log version
 	klog.Infof("Version: %+v", version.Get())
 
