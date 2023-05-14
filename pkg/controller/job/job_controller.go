@@ -1366,6 +1366,7 @@ func jobSuspended(job *batch.Job) bool {
 // Respects back-off; does not create new pods if the back-off time has not passed
 // Does NOT modify <activePods>.
 func (jm *Controller) manageJob(ctx context.Context, job *batch.Job, activePods []*v1.Pod, succeeded int32, succeededIndexes []interval, backoff backoffRecord) (int32, string, error) {
+	klog.Infof("%s [CONTINUUM] 0028", time.Now().UnixNano())
 	active := int32(len(activePods))
 	parallelism := *job.Spec.Parallelism
 	jobKey, err := controller.KeyFunc(job)

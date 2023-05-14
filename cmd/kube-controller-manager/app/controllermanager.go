@@ -180,7 +180,6 @@ func ResyncPeriod(c *config.CompletedConfig) func() time.Duration {
 
 // Run runs the KubeControllerManagerOptions.
 func Run(ctx context.Context, c *config.CompletedConfig) error {
-	klog.Infof("%s [CONTINUUM] 0028", time.Now().UnixNano())
 	logger := klog.FromContext(ctx)
 	stopCh := ctx.Done()
 
