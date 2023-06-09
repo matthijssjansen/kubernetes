@@ -1077,6 +1077,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Step 4: Create a sandbox for the pod if necessary.
+	klog.Infof("%s [CONTINUUM] 0506 Create a sandbox for the pod pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	podSandboxID := podContainerChanges.SandboxID
 	if podContainerChanges.CreateSandbox {
 		var msg string
@@ -1127,6 +1128,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 			m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedCreatePodSandBox, "Failed to create pod sandbox: %v", err)
 			return
 		}
+		klog.Infof("%s [CONTINUUM] 0512 sandbox created pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 		klog.V(4).InfoS("Created PodSandbox for pod", "podSandboxID", podSandboxID, "pod", klog.KObj(pod))
 
 		resp, err := m.runtimeService.PodSandboxStatus(ctx, podSandboxID, false)
@@ -1163,6 +1165,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Get podSandboxConfig for containers to start.
+	klog.Infof("%s [CONTINUUM] 0513 get sandbox config pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	configPodSandboxResult := kubecontainer.NewSyncResult(kubecontainer.ConfigPodSandbox, podSandboxID)
 	result.AddSyncResult(configPodSandboxResult)
 	podSandboxConfig, err := m.generatePodSandboxConfig(pod, podContainerChanges.Attempt)
@@ -1178,6 +1181,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	// currently: "container", "init container" or "ephemeral container"
 	// metricLabel is the label used to describe this type of container in monitoring metrics.
 	// currently: "container", "init_container" or "ephemeral_container"
+	klog.Infof("%s [CONTINUUM] 0514 Start containers pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	start := func(ctx context.Context, typeName, metricLabel string, spec *startSpec) error {
 		startContainerResult := kubecontainer.NewSyncResult(kubecontainer.StartContainer, spec.container.Name)
 		result.AddSyncResult(startContainerResult)
@@ -1221,11 +1225,13 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	// These are started "prior" to init containers to allow running ephemeral containers even when there
 	// are errors starting an init container. In practice init containers will start first since ephemeral
 	// containers cannot be specified on pod creation.
+	klog.Infof("%s [CONTINUUM] 0519 Start ephemeral containers pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	for _, idx := range podContainerChanges.EphemeralContainersToStart {
 		start(ctx, "ephemeral container", metrics.EphemeralContainer, ephemeralContainerStartSpec(&pod.Spec.EphemeralContainers[idx]))
 	}
 
 	// Step 6: start the init container.
+	klog.Infof("%s [CONTINUUM] 0520 Start init container pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if container := podContainerChanges.NextInitContainerToStart; container != nil {
 		// Start the next init container.
 		if err := start(ctx, "init container", metrics.InitContainer, containerStartSpec(container)); err != nil {
@@ -1237,6 +1243,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Step 7: For containers in podContainerChanges.ContainersToUpdate[CPU,Memory] list, invoke UpdateContainerResources
+	klog.Infof("%s [CONTINUUM] 0520 resize pod for veritcal scaling pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if isInPlacePodVerticalScalingAllowed(pod) {
 		if len(podContainerChanges.ContainersToUpdate) > 0 || podContainerChanges.UpdatePodResources {
 			m.doPodResizeAction(pod, podStatus, podContainerChanges, result)
@@ -1244,6 +1251,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Step 8: start containers in podContainerChanges.ContainersToStart.
+	klog.Infof("%s [CONTINUUM] 0521 start containers if scaled pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	for _, idx := range podContainerChanges.ContainersToStart {
 		start(ctx, "container", metrics.Container, containerStartSpec(&pod.Spec.Containers[idx]))
 	}
