@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
@@ -674,6 +675,7 @@ See https://kubernetes.io/docs/reference/using-api/server-side-apply/#conflicts`
 			return cmdutil.AddSourceToErr("creating", info.Source, err)
 		}
 
+		klog.Infof("%s [CONTINUUM] 0401", time.Now().UnixNano())
 		if o.DryRunStrategy != cmdutil.DryRunClient {
 			// Then create the resource and skip the three-way merge
 			obj, err := helper.Create(info.Namespace, true, info.Object)
