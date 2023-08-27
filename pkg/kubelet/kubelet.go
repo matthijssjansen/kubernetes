@@ -1828,7 +1828,7 @@ func (kl *Kubelet) SyncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 				if err := kl.containerManager.UpdateQOSCgroups(); err != nil {
 					klog.V(2).InfoS("Failed to update QoS cgroups while syncing pod", "pod", klog.KObj(pod), "err", err)
 				}
-				klog.Infof("%s [CONTINUUM] 0545 ensure exists pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+				klog.Infof("%s [CONTINUUM] 0542 ensure exists pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 				if err := pcm.EnsureExists(pod); err != nil {
 					kl.recorder.Eventf(pod, v1.EventTypeWarning, events.FailedToCreatePodContainer, "unable to ensure pod container exists: %v", err)
 					return false, fmt.Errorf("failed to ensure that the pod: %v cgroups exist and are correctly applied: %v", pod.UID, err)
@@ -1930,7 +1930,7 @@ func (kl *Kubelet) SyncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		}
 	}
 
-	klog.Infof("%s [CONTINUUM] 0515 Pod is done pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0523 Pod is done pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	return false, nil
 }
 

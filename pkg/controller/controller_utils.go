@@ -518,7 +518,9 @@ func (r RealPodControl) CreatePods(ctx context.Context, namespace string, templa
 }
 
 func (r RealPodControl) CreatePodsWithGenerateName(ctx context.Context, namespace string, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference, generateName string) error {
-	klog.Infof("%s [CONTINUUM] 0277", time.Now().UnixNano())
+	job, _ := meta.Accessor(controllerObject)
+	klog.Infof("%s [CONTINUUM] 0277 job=%s", time.Now().UnixNano(), klog.KObj(job))
+
 	if err := validateControllerRef(controllerRef); err != nil {
 		return err
 	}

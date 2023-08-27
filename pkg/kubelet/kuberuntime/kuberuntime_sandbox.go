@@ -79,7 +79,7 @@ func (m *kubeGenericRuntimeManager) createPodSandbox(ctx context.Context, pod *v
 
 // generatePodSandboxConfig generates pod sandbox config from v1.Pod.
 func (m *kubeGenericRuntimeManager) generatePodSandboxConfig(pod *v1.Pod, attempt uint32) (*runtimeapi.PodSandboxConfig, error) {
-	klog.Infof("%s [CONTINUUM] 0507 Get sandbox DNS pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0509 Get sandbox DNS pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 
 	// TODO: deprecating podsandbox resource requirements in favor of the pod level cgroup
 	// Refer https://github.com/kubernetes/kubernetes/issues/29871
@@ -114,11 +114,11 @@ func (m *kubeGenericRuntimeManager) generatePodSandboxConfig(pod *v1.Pod, attemp
 		podSandboxConfig.Hostname = podHostname
 	}
 
-	klog.Infof("%s [CONTINUUM] 0508 Sandbox build pod logs directory pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0510 Sandbox build pod logs directory pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	logDir := BuildPodLogsDirectory(pod.Namespace, pod.Name, pod.UID)
 	podSandboxConfig.LogDirectory = logDir
 
-	klog.Infof("%s [CONTINUUM] 0509 Sandbox port mapping pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0511 Sandbox port mapping pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	portMappings := []*runtimeapi.PortMapping{}
 	for _, c := range pod.Spec.Containers {
 		containerPortMappings := kubecontainer.MakePortMappings(&c)
@@ -141,7 +141,7 @@ func (m *kubeGenericRuntimeManager) generatePodSandboxConfig(pod *v1.Pod, attemp
 		podSandboxConfig.PortMappings = portMappings
 	}
 
-	klog.Infof("%s [CONTINUUM] 0510 Generate sandbox config pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0512 Generate sandbox config pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	lc, err := m.generatePodSandboxLinuxConfig(pod)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (m *kubeGenericRuntimeManager) generatePodSandboxConfig(pod *v1.Pod, attemp
 	}
 
 	// Update config to include overhead, sandbox level resources
-	klog.Infof("%s [CONTINUUM] 0511 apply sandbox resources pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0513 apply sandbox resources pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if err := m.applySandboxResources(pod, podSandboxConfig); err != nil {
 		return nil, err
 	}

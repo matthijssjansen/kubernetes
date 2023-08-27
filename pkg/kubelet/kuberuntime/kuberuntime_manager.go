@@ -1128,7 +1128,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 			m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedCreatePodSandBox, "Failed to create pod sandbox: %v", err)
 			return
 		}
-		klog.Infof("%s [CONTINUUM] 0512 sandbox created pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+		klog.Infof("%s [CONTINUUM] 0507 sandbox created pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 		klog.V(4).InfoS("Created PodSandbox for pod", "podSandboxID", podSandboxID, "pod", klog.KObj(pod))
 
 		resp, err := m.runtimeService.PodSandboxStatus(ctx, podSandboxID, false)
@@ -1165,7 +1165,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Get podSandboxConfig for containers to start.
-	klog.Infof("%s [CONTINUUM] 0513 get sandbox config pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0508 get sandbox config pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	configPodSandboxResult := kubecontainer.NewSyncResult(kubecontainer.ConfigPodSandbox, podSandboxID)
 	result.AddSyncResult(configPodSandboxResult)
 	podSandboxConfig, err := m.generatePodSandboxConfig(pod, podContainerChanges.Attempt)
@@ -1243,7 +1243,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Step 7: For containers in podContainerChanges.ContainersToUpdate[CPU,Memory] list, invoke UpdateContainerResources
-	klog.Infof("%s [CONTINUUM] 0520 resize pod for veritcal scaling pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0521 resize pod for veritcal scaling pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if isInPlacePodVerticalScalingAllowed(pod) {
 		if len(podContainerChanges.ContainersToUpdate) > 0 || podContainerChanges.UpdatePodResources {
 			m.doPodResizeAction(pod, podStatus, podContainerChanges, result)
@@ -1251,7 +1251,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, po
 	}
 
 	// Step 8: start containers in podContainerChanges.ContainersToStart.
-	klog.Infof("%s [CONTINUUM] 0521 start containers if scaled pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+	klog.Infof("%s [CONTINUUM] 0522 start containers if scaled pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	for _, idx := range podContainerChanges.ContainersToStart {
 		start(ctx, "container", metrics.Container, containerStartSpec(&pod.Spec.Containers[idx]))
 	}

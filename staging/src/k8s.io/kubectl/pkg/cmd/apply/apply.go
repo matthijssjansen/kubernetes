@@ -675,7 +675,7 @@ See https://kubernetes.io/docs/reference/using-api/server-side-apply/#conflicts`
 			return cmdutil.AddSourceToErr("creating", info.Source, err)
 		}
 
-		klog.Infof("%s [CONTINUUM] 0401", time.Now().UnixNano())
+		klog.Infof("%s [CONTINUUM] 0401 job=%s", time.Now().UnixNano(), info.Name)
 		if o.DryRunStrategy != cmdutil.DryRunClient {
 			// Then create the resource and skip the three-way merge
 			obj, err := helper.Create(info.Namespace, true, info.Object)
