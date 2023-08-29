@@ -19,6 +19,7 @@ package flowcontrol
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	endpointsrequest "k8s.io/apiserver/pkg/endpoints/request"
@@ -158,6 +159,153 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 	workEstimator func() fcrequest.WorkEstimate,
 	queueNoteFn fq.QueueNoteFn,
 	execFn func()) {
+	// Print when a request just entered the APIserver
+	// Only for the empty application that we're investigating
+	// We give an example for each request - and be as specific in the selection statements
+	if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "jobs" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		requestDigest.RequestInfo.Name == "" &&
+		requestDigest.User.GetName() == "kubernetes-admin" {
+		// The kubectl sent a request to create a new job
+		//
+		// RequestDigest{
+		// 		RequestInfo: &request.RequestInfo{
+		//			IsResourceRequest:true,
+		//			Path:"/apis/batch/v1/namespaces/default/jobs",
+		// 			Verb:"create",
+		//			APIPrefix:"apis",
+		//			APIGroup:"batch",
+		//			APIVersion:"v1",
+		//			Namespace:"default",
+		//			Resource:"jobs",
+		//			Subresource:"",
+		//			Name:"",
+		//			Parts:[]string{"jobs"}},
+		//		User: &user.DefaultInfo{
+		//			Name:"kubernetes-admin",
+		//			UID:"",
+		// 			Groups:[]string{"system:masters", "system:authenticated"},
+		//			Extra:map[string][]string(nil)}}
+		klog.Infof("%s [CONTINUUM] 0200", time.Now().UnixNano())
+	} else if requestDigest.RequestInfo.Verb == "get" &&
+		requestDigest.RequestInfo.Namespace == "kube-system" &&
+		requestDigest.RequestInfo.Resource == "serviceaccounts" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		requestDigest.RequestInfo.Name == "job-controller" &&
+		requestDigest.User.GetName() == "system:kube-controller-manager" {
+		// The job-controller reads the just requested job
+		//
+		// RequestDigest{
+		// 		RequestInfo: &request.RequestInfo{
+		// 			IsResourceRequest:true,
+		// 			Path:"/api/v1/namespaces/kube-system/serviceaccounts/job-controller",
+		// 			Verb:"get",
+		// 			APIPrefix:"api",
+		// 			APIGroup:"",
+		// 			APIVersion:"v1",
+		// 			Namespace:"kube-system",
+		// 			Resource:"serviceaccounts",
+		// 			Subresource:"",
+		// 			Name:"job-controller",
+		// 			Parts:[]string{"serviceaccounts", "job-controller"}},
+		// 		User: &user.DefaultInfo{
+		// 			Name:"system:kube-controller-manager",
+		// 			UID:"",
+		// 			Groups:[]string{"system:authenticated"},
+		// 			Extra:map[string][]string(nil)}}
+		klog.Infof("%s [CONTINUUM] 0202", time.Now().UnixNano())
+	} else if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "pods" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		requestDigest.RequestInfo.Name == "" &&
+		requestDigest.User.GetName() == "system:serviceaccount:kube-system:job-controller" {
+		// Creating the pod for the job-controller
+		//
+		// RequestDigest{
+		//  	RequestInfo: &request.RequestInfo{
+		// 			IsResourceRequest:true,
+		// 			Path:"/api/v1/namespaces/default/pods",
+		// 			Verb:"create",
+		// 			APIPrefix:"api",
+		// 			APIGroup:"",
+		// 			APIVersion:"v1",
+		// 			Namespace:"default",
+		// 			Resource:"pods",
+		// 			Subresource:"",
+		// 			Name:"",
+		// 			Parts:[]string{"pods"}},
+		// 		User: &user.DefaultInfo{
+		// 			Name:"system:serviceaccount:kube-system:job-controller",
+		// 			UID:"7f26f97f-9541-48d0-860e-a8517db5489d",
+		// 			Groups:[]string{"system:serviceaccounts", "system:serviceaccounts:kube-system", "system:authenticated"},
+		// 			Extra:map[string][]string(nil)}}
+		klog.Infof("%s [CONTINUUM] 0204", time.Now().UnixNano())
+	} else if true {
+		// TODO: Scheduler reads the pod (get) ----------------------------------------
+		//
+		//
+		//
+		//
+		//
+	} else if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "pods" &&
+		requestDigest.RequestInfo.Subresource == "binding" &&
+		strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
+		requestDigest.User.GetName() == "system:kube-scheduler" {
+		// Scheduler creates the binding from pod to node
+		//
+		// RequestDigest{
+		// 		RequestInfo: &request.RequestInfo{
+		// 			IsResourceRequest:true,
+		// 			Path:"/api/v1/namespaces/default/pods/empty-gp574/binding",
+		// 			Verb:"create",
+		// 			APIPrefix:"api",
+		// 			APIGroup:"",
+		// 			APIVersion:"v1",
+		// 			Namespace:"default",
+		// 			Resource:"pods",
+		// 			Subresource:"binding",
+		// 			Name:"empty-gp574",
+		// 			Parts:[]string{"pods", "empty-gp574", "binding"}},
+		// 		User: &user.DefaultInfo{
+		// 			Name:"system:kube-scheduler",
+		// 			UID:"",
+		// 			Groups:[]string{"system:authenticated"},
+		// 			Extra:map[string][]string(nil)}}
+		klog.Infof("%s [CONTINUUM] 0208", time.Now().UnixNano())
+	} else if requestDigest.RequestInfo.Verb == "get" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "pods" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
+		strings.Contains(requestDigest.User.GetName(), "system:node:") {
+		// Kubelet on worker node reads the pod
+		//
+		// RequestDigest{
+		// 		RequestInfo: &request.RequestInfo{
+		// 			IsResourceRequest:true,
+		// 			Path:"/api/v1/namespaces/default/pods/empty-gp574",
+		// 			Verb:"get",
+		// 			APIPrefix:"api",
+		// 			APIGroup:"",
+		// 			APIVersion:"v1",
+		// 			Namespace:"default",
+		// 			Resource:"pods",
+		// 			Subresource:"",
+		// 			Name:"empty-gp574",
+		// 			Parts:[]string{"pods", "empty-gp574"}},
+		// 		User: &user.DefaultInfo{
+		// 			Name:"system:node:cloud0matthijs",
+		// 			UID:"",
+		// 			Groups:[]string{"system:nodes", "system:authenticated"},
+		// 			Extra:map[string][]string(nil)}}
+		klog.Infof("%s [CONTINUUM] 0208", time.Now().UnixNano())
+	}
+
 	fs, pl, isExempt, req, startWaitingTime := cfgCtlr.startRequest(ctx, requestDigest, noteFn, workEstimator, queueNoteFn)
 	queued := startWaitingTime != time.Time{}
 	if req == nil {
@@ -171,6 +319,15 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 	var executed bool
 	idle, panicking := true, true
 	defer func() {
+		// Print when a request has succesfully been processed by the APIserver
+		// Only for the empty application that we're investigating
+		// Similar to the prints at the start of this function, just other numbers to indicate finish
+		if strings.Contains(requestDigest.RequestInfo.Name, "empty") {
+			if requestDigest.RequestInfo.Resource == "jobs" && requestDigest.RequestInfo.Verb == "create" {
+				klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
+			}
+		}
+
 		klog.V(7).Infof("Handle(%#+v) => fsName=%q, distMethod=%#+v, plName=%q, isExempt=%v, queued=%v, Finish() => panicking=%v idle=%v",
 			requestDigest, fs.Name, fs.Spec.DistinguisherMethod, pl.Name, isExempt, queued, panicking, idle)
 		if idle {
