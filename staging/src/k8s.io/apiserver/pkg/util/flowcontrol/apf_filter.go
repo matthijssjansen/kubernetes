@@ -168,7 +168,7 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 		requestDigest.RequestInfo.Subresource == "" &&
 		requestDigest.RequestInfo.Name == "" &&
 		requestDigest.User.GetName() == "kubernetes-admin" {
-		// The kubectl sent a request to create a new job
+		// Kubectl sent a request to create a new job
 		//
 		// RequestDigest{
 		// 		RequestInfo: &request.RequestInfo{
@@ -243,13 +243,6 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 		// 			Groups:[]string{"system:serviceaccounts", "system:serviceaccounts:kube-system", "system:authenticated"},
 		// 			Extra:map[string][]string(nil)}}
 		klog.Infof("%s [CONTINUUM] 0204", time.Now().UnixNano())
-	} else if true {
-		// TODO: Scheduler reads the pod (get) ----------------------------------------
-		//
-		//
-		//
-		//
-		//
 	} else if requestDigest.RequestInfo.Verb == "create" &&
 		requestDigest.RequestInfo.Namespace == "default" &&
 		requestDigest.RequestInfo.Resource == "pods" &&
@@ -276,7 +269,7 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 		// 			UID:"",
 		// 			Groups:[]string{"system:authenticated"},
 		// 			Extra:map[string][]string(nil)}}
-		klog.Infof("%s [CONTINUUM] 0208", time.Now().UnixNano())
+		klog.Infof("%s [CONTINUUM] 0206", time.Now().UnixNano())
 	} else if requestDigest.RequestInfo.Verb == "get" &&
 		requestDigest.RequestInfo.Namespace == "default" &&
 		requestDigest.RequestInfo.Resource == "pods" &&
@@ -322,10 +315,43 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 		// Print when a request has succesfully been processed by the APIserver
 		// Only for the empty application that we're investigating
 		// Similar to the prints at the start of this function, just other numbers to indicate finish
-		if strings.Contains(requestDigest.RequestInfo.Name, "empty") {
-			if requestDigest.RequestInfo.Resource == "jobs" && requestDigest.RequestInfo.Verb == "create" {
-				klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
-			}
+		if requestDigest.RequestInfo.Verb == "create" &&
+			requestDigest.RequestInfo.Namespace == "default" &&
+			requestDigest.RequestInfo.Resource == "jobs" &&
+			requestDigest.RequestInfo.Subresource == "" &&
+			requestDigest.RequestInfo.Name == "" &&
+			requestDigest.User.GetName() == "kubernetes-admin" {
+			// Kubectl sent a request to create a new job
+			klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
+		} else if requestDigest.RequestInfo.Verb == "get" &&
+			requestDigest.RequestInfo.Namespace == "kube-system" &&
+			requestDigest.RequestInfo.Resource == "serviceaccounts" &&
+			requestDigest.RequestInfo.Subresource == "" &&
+			requestDigest.RequestInfo.Name == "job-controller" &&
+			requestDigest.User.GetName() == "system:kube-controller-manager" {
+			// The job-controller reads the just requested job
+			klog.Infof("%s [CONTINUUM] 0203", time.Now().UnixNano())
+		} else if requestDigest.RequestInfo.Verb == "create" &&
+			requestDigest.RequestInfo.Namespace == "default" &&
+			requestDigest.RequestInfo.Resource == "pods" &&
+			requestDigest.RequestInfo.Subresource == "" &&
+			requestDigest.RequestInfo.Name == "" &&
+			requestDigest.User.GetName() == "system:serviceaccount:kube-system:job-controller" {
+			klog.Infof("%s [CONTINUUM] 0205", time.Now().UnixNano())
+		} else if requestDigest.RequestInfo.Verb == "create" &&
+			requestDigest.RequestInfo.Namespace == "default" &&
+			requestDigest.RequestInfo.Resource == "pods" &&
+			requestDigest.RequestInfo.Subresource == "binding" &&
+			strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
+			requestDigest.User.GetName() == "system:kube-scheduler" {
+			klog.Infof("%s [CONTINUUM] 0207", time.Now().UnixNano())
+		} else if requestDigest.RequestInfo.Verb == "get" &&
+			requestDigest.RequestInfo.Namespace == "default" &&
+			requestDigest.RequestInfo.Resource == "pods" &&
+			requestDigest.RequestInfo.Subresource == "" &&
+			strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
+			strings.Contains(requestDigest.User.GetName(), "system:node:") {
+			klog.Infof("%s [CONTINUUM] 0209", time.Now().UnixNano())
 		}
 
 		klog.V(7).Infof("Handle(%#+v) => fsName=%q, distMethod=%#+v, plName=%q, isExempt=%v, queued=%v, Finish() => panicking=%v idle=%v",
