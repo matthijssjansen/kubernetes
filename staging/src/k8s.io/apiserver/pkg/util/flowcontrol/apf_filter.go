@@ -243,33 +243,6 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 		// 			Groups:[]string{"system:authenticated"},
 		// 			Extra:map[string][]string(nil)}}
 		klog.Infof("%s [CONTINUUM] 0204", time.Now().UnixNano())
-	} else if requestDigest.RequestInfo.Verb == "get" &&
-		requestDigest.RequestInfo.Namespace == "default" &&
-		requestDigest.RequestInfo.Resource == "pods" &&
-		requestDigest.RequestInfo.Subresource == "" &&
-		strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
-		strings.Contains(requestDigest.User.GetName(), "system:node:") {
-		// Kubelet on worker node reads the pod
-		//
-		// RequestDigest{
-		// 		RequestInfo: &request.RequestInfo{
-		// 			IsResourceRequest:true,
-		// 			Path:"/api/v1/namespaces/default/pods/empty-gp574",
-		// 			Verb:"get",
-		// 			APIPrefix:"api",
-		// 			APIGroup:"",
-		// 			APIVersion:"v1",
-		// 			Namespace:"default",
-		// 			Resource:"pods",
-		// 			Subresource:"",
-		// 			Name:"empty-gp574",
-		// 			Parts:[]string{"pods", "empty-gp574"}},
-		// 		User: &user.DefaultInfo{
-		// 			Name:"system:node:cloud0matthijs",
-		// 			UID:"",
-		// 			Groups:[]string{"system:nodes", "system:authenticated"},
-		// 			Extra:map[string][]string(nil)}}
-		klog.Infof("%s [CONTINUUM] 0206", time.Now().UnixNano())
 	}
 
 	fs, pl, isExempt, req, startWaitingTime := cfgCtlr.startRequest(ctx, requestDigest, noteFn, workEstimator, queueNoteFn)
@@ -285,40 +258,6 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 	var executed bool
 	idle, panicking := true, true
 	defer func() {
-		// Print when a request has succesfully been processed by the APIserver
-		// Only for the empty application that we're investigating
-		// Similar to the prints at the start of this function, just other numbers to indicate finish
-		if requestDigest.RequestInfo.Verb == "create" &&
-			requestDigest.RequestInfo.Namespace == "default" &&
-			requestDigest.RequestInfo.Resource == "jobs" &&
-			requestDigest.RequestInfo.Subresource == "" &&
-			requestDigest.RequestInfo.Name == "" &&
-			requestDigest.User.GetName() == "kubernetes-admin" {
-			// Kubectl sent a request to create a new job
-			klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
-		} else if requestDigest.RequestInfo.Verb == "create" &&
-			requestDigest.RequestInfo.Namespace == "default" &&
-			requestDigest.RequestInfo.Resource == "pods" &&
-			requestDigest.RequestInfo.Subresource == "" &&
-			requestDigest.RequestInfo.Name == "" &&
-			requestDigest.User.GetName() == "system:serviceaccount:kube-system:job-controller" {
-			klog.Infof("%s [CONTINUUM] 0203", time.Now().UnixNano())
-		} else if requestDigest.RequestInfo.Verb == "create" &&
-			requestDigest.RequestInfo.Namespace == "default" &&
-			requestDigest.RequestInfo.Resource == "pods" &&
-			requestDigest.RequestInfo.Subresource == "binding" &&
-			strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
-			requestDigest.User.GetName() == "system:kube-scheduler" {
-			klog.Infof("%s [CONTINUUM] 0205", time.Now().UnixNano())
-		} else if requestDigest.RequestInfo.Verb == "get" &&
-			requestDigest.RequestInfo.Namespace == "default" &&
-			requestDigest.RequestInfo.Resource == "pods" &&
-			requestDigest.RequestInfo.Subresource == "" &&
-			strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
-			strings.Contains(requestDigest.User.GetName(), "system:node:") {
-			klog.Infof("%s [CONTINUUM] 0207", time.Now().UnixNano())
-		}
-
 		klog.V(7).Infof("Handle(%#+v) => fsName=%q, distMethod=%#+v, plName=%q, isExempt=%v, queued=%v, Finish() => panicking=%v idle=%v",
 			requestDigest, fs.Name, fs.Spec.DistinguisherMethod, pl.Name, isExempt, queued, panicking, idle)
 		if idle {
