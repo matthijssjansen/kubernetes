@@ -23,7 +23,6 @@ import (
 	rt "runtime"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/klog/v2"
@@ -148,20 +147,6 @@ func (d director) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-	}
-
-	// Print when a request has succesfully been processed by the APIserver
-	// Only for the empty application that we're investigating
-	// Similar to the prints at the start of this function, just other numbers to indicate finish
-	if req.Method == "POST" && path == "/apis/batch/v1/namespaces/default/jobs" {
-		// Kubectl sent a request to create a new job
-		klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
-	} else if req.Method == "POST" && path == "/api/v1/namespaces/default/pods" {
-		// Creating the pod for the job-controller
-		klog.Infof("%s [CONTINUUM] 0203", time.Now().UnixNano())
-	} else if req.Method == "POST" && strings.Contains(path, "/api/v1/namespaces/default/pods/") && strings.Contains(path, "/binding") {
-		// Scheduler creates the binding from pod to nod
-		klog.Infof("%s [CONTINUUM] 0205", time.Now().UnixNano())
 	}
 
 	// if we didn't find a match, then we just skip gorestful altogether

@@ -246,6 +246,36 @@ func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest Reque
 	}
 
 	fs, pl, isExempt, req, startWaitingTime := cfgCtlr.startRequest(ctx, requestDigest, noteFn, workEstimator, queueNoteFn)
+
+	// Print when a request has succesfully been processed by the APIserver
+	// Only for the empty application that we're investigating
+	// Similar to the prints at the start of this function, just other numbers to indicate finish
+	if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "jobs" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		requestDigest.RequestInfo.Name == "" &&
+		requestDigest.User.GetName() == "kubernetes-admin" {
+		// Kubectl sent a request to create a new job
+		klog.Infof("%s [CONTINUUM] 0201", time.Now().UnixNano())
+	} else if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "pods" &&
+		requestDigest.RequestInfo.Subresource == "" &&
+		requestDigest.RequestInfo.Name == "" &&
+		requestDigest.User.GetName() == "system:serviceaccount:kube-system:job-controller" {
+		// Creating the pod for the job-controller
+		klog.Infof("%s [CONTINUUM] 0203", time.Now().UnixNano())
+	} else if requestDigest.RequestInfo.Verb == "create" &&
+		requestDigest.RequestInfo.Namespace == "default" &&
+		requestDigest.RequestInfo.Resource == "pods" &&
+		requestDigest.RequestInfo.Subresource == "binding" &&
+		strings.Contains(requestDigest.RequestInfo.Name, "empty") &&
+		requestDigest.User.GetName() == "system:kube-scheduler" {
+		// Scheduler creates the binding from pod to nod
+		klog.Infof("%s [CONTINUUM] 0205", time.Now().UnixNano())
+	}
+
 	queued := startWaitingTime != time.Time{}
 	if req == nil {
 		if queued {
