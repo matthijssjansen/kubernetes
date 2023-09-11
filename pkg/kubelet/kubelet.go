@@ -1615,6 +1615,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		klog.V(4).InfoS("syncPod exit", "pod", klog.KObj(pod), "podUID", pod.UID, "isTerminal", isTerminal)
 	}()
 
+	klog.Infof("%s [CONTINUUM] 0500 Kubelet starts processing pod pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	// Latency measurements for the main workflow are relative to the
 	// first time the pod was seen by kubelet.
 	var firstSeenTime time.Time
@@ -1708,6 +1710,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		return false, syncErr
 	}
 
+	klog.Infof("%s [CONTINUUM] 0501 start network plugin pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	// If the network plugin is not ready, only start the pod if it uses the host network
 	if err := kl.runtimeState.networkErrors(); err != nil && !kubecontainer.IsHostNetworkPod(pod) {
 		kl.recorder.Eventf(pod, v1.EventTypeWarning, events.NetworkNotReady, "%s: %v", NetworkNotReadyErrorMsg, err)
@@ -1723,6 +1727,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 			kl.configMapManager.RegisterPod(pod)
 		}
 	}
+
+	klog.Infof("%s [CONTINUUM] 0502 create cgroup pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 
 	// Create Cgroups for the pod and apply resource parameters
 	// to them if cgroups-per-qos flag is enabled.
@@ -1761,11 +1767,14 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		// expected to run only once and if the kubelet is restarted then
 		// they are not expected to run again.
 		// We don't create and apply updates to cgroup if its a run once pod and was killed above
+		klog.Infof("%s [CONTINUUM] 0540 after start create cgroup pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 		if !(podKilled && pod.Spec.RestartPolicy == v1.RestartPolicyNever) {
 			if !pcm.Exists(pod) {
+				klog.Infof("%s [CONTINUUM] 0541 cgroup update qos cgroups pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 				if err := kl.containerManager.UpdateQOSCgroups(); err != nil {
 					klog.V(2).InfoS("Failed to update QoS cgroups while syncing pod", "pod", klog.KObj(pod), "err", err)
 				}
+				klog.Infof("%s [CONTINUUM] 0542 ensure exists pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 				if err := pcm.EnsureExists(pod); err != nil {
 					kl.recorder.Eventf(pod, v1.EventTypeWarning, events.FailedToCreatePodContainer, "unable to ensure pod container exists: %v", err)
 					return false, fmt.Errorf("failed to ensure that the pod: %v cgroups exist and are correctly applied: %v", pod.UID, err)
@@ -1775,6 +1784,7 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 	}
 
 	// Create Mirror Pod for Static Pod if it doesn't already exist
+	klog.Infof("%s [CONTINUUM] 0503 Make mirror pod pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if kubetypes.IsStaticPod(pod) {
 		deleted := false
 		if mirrorPod != nil {
@@ -1806,6 +1816,7 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 	}
 
 	// Make data directories for the pod
+	klog.Infof("%s [CONTINUUM] 0504 Make data directories pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	if err := kl.makePodDataDirs(pod); err != nil {
 		kl.recorder.Eventf(pod, v1.EventTypeWarning, events.FailedToMakePodDataDirectories, "error making pod data directories: %v", err)
 		klog.ErrorS(err, "Unable to make pod data directories for pod", "pod", klog.KObj(pod))
@@ -1830,6 +1841,7 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 	kl.probeManager.AddPod(pod)
 
 	// Call the container runtime's SyncPod callback
+	klog.Infof("%s [CONTINUUM] 0505 SyncPod pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	result := kl.containerRuntime.SyncPod(ctx, pod, podStatus, pullSecrets, kl.backOff)
 	kl.reasonCache.Update(pod.UID, result)
 	if err := result.Error(); err != nil {
@@ -1845,6 +1857,7 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		return false, nil
 	}
 
+	klog.Infof("%s [CONTINUUM] 0523 Pod is done pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 	return false, nil
 }
 

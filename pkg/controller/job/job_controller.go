@@ -1401,7 +1401,6 @@ func jobSuspended(job *batch.Job) bool {
 // pods according to what is specified in the job.Spec.
 // Does NOT modify <activePods>.
 func (jm *Controller) manageJob(ctx context.Context, job *batch.Job, activePods []*v1.Pod, succeeded int32, succeededIndexes []interval) (int32, string, error) {
-	klog.Infof("%s [CONTINUUM] 0028", time.Now().UnixNano())
 	active := int32(len(activePods))
 	parallelism := *job.Spec.Parallelism
 	jobKey, err := controller.KeyFunc(job)
@@ -1409,6 +1408,8 @@ func (jm *Controller) manageJob(ctx context.Context, job *batch.Job, activePods 
 		utilruntime.HandleError(fmt.Errorf("Couldn't get key for job %#v: %v", job, err))
 		return 0, metrics.JobSyncActionTracking, nil
 	}
+
+	klog.Infof("%s [CONTINUUM] 0028 job=%s", time.Now().UnixNano(), klog.KObj(job))
 
 	if jobSuspended(job) {
 		klog.V(4).InfoS("Deleting all active pods in suspended job", "job", klog.KObj(job), "active", active)

@@ -174,6 +174,7 @@ func (m *kubeGenericRuntimeManager) startContainer(ctx context.Context, podSandb
 	container := spec.container
 
 	// Step 1: pull the image.
+	klog.Infof("%s [CONTINUUM] 0515 Pull image pod=%s container=%s", time.Now().UnixNano(), klog.KObj(pod), container.Name)
 	imageRef, msg, err := m.imagePuller.EnsureImageExists(ctx, pod, container, pullSecrets, podSandboxConfig)
 	if err != nil {
 		s, _ := grpcstatus.FromError(err)
@@ -183,6 +184,7 @@ func (m *kubeGenericRuntimeManager) startContainer(ctx context.Context, podSandb
 
 	// Step 2: create the container.
 	// For a new container, the RestartCount should be 0
+	klog.Infof("%s [CONTINUUM] 0516 Create container pod=%s, container=%s", time.Now().UnixNano(), klog.KObj(pod), container.Name)
 	restartCount := 0
 	containerStatus := podStatus.FindContainerStatusByName(container.Name)
 	if containerStatus != nil {
@@ -244,6 +246,7 @@ func (m *kubeGenericRuntimeManager) startContainer(ctx context.Context, podSandb
 	m.recordContainerEvent(pod, container, containerID, v1.EventTypeNormal, events.CreatedContainer, fmt.Sprintf("Created container %s", container.Name))
 
 	// Step 3: start the container.
+	klog.Infof("%s [CONTINUUM] 0517 Start container pod=%s container=%s", time.Now().UnixNano(), klog.KObj(pod), container.Name)
 	err = m.runtimeService.StartContainer(ctx, containerID)
 	if err != nil {
 		s, _ := grpcstatus.FromError(err)
@@ -272,6 +275,7 @@ func (m *kubeGenericRuntimeManager) startContainer(ctx context.Context, podSandb
 	}
 
 	// Step 4: execute the post start hook.
+	klog.Infof("%s [CONTINUUM] 0518 execute post start hook pod=%s container=%s", time.Now().UnixNano(), klog.KObj(pod), container.Name)
 	if container.Lifecycle != nil && container.Lifecycle.PostStart != nil {
 		kubeContainerID := kubecontainer.ContainerID{
 			Type: m.runtimeName,

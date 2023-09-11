@@ -17,7 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"time"
+
 	"k8s.io/component-base/cli"
+	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd"
 	"k8s.io/kubectl/pkg/cmd/util"
 
@@ -26,9 +29,11 @@ import (
 )
 
 func main() {
+	klog.Infof("%s [CONTINUUM] 0400", time.Now().UnixNano())
 	command := cmd.NewDefaultKubectlCommand()
 	if err := cli.RunNoErrOutput(command); err != nil {
 		// Pretty-print the error and exit with an error.
 		util.CheckErr(err)
 	}
+	klog.Infof("%s [CONTINUUM] 0402", time.Now().UnixNano())
 }
