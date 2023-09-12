@@ -1877,9 +1877,12 @@ func (kl *Kubelet) SyncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		return false, err
 	}
 
+	klog.Infof("%s [CONTINUUM] 0555 Mount volumes pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	// Volume manager will not mount volumes for terminating pods
 	// TODO: once context cancellation is added this check can be removed
 	if !kl.podWorkers.IsPodTerminationRequested(pod.UID) {
+		klog.Infof("%s [CONTINUUM] 0556 mount volume pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 		// Wait for volumes to attach/mount
 		if err := kl.volumeManager.WaitForAttachAndMount(pod); err != nil {
 			kl.recorder.Eventf(pod, v1.EventTypeWarning, events.FailedMountVolume, "Unable to attach or mount volumes: %v", err)
@@ -1887,6 +1890,8 @@ func (kl *Kubelet) SyncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 			return false, err
 		}
 	}
+
+	klog.Infof("%s [CONTINUUM] 0560 Pull secrets and probe pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 
 	// Fetch the pull secrets for the pod
 	pullSecrets := kl.getPullSecretsForPod(pod)

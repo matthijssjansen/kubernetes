@@ -78,10 +78,10 @@ var (
 	// MaxUncountedPods is the maximum size the slices in
 	// .status.uncountedTerminatedPods should have to keep their representation
 	// roughly below 20 KB. Exported for tests
-	MaxUncountedPods = 500
+	MaxUncountedPods = 100000
 	// MaxPodCreateDeletePerSync is the maximum number of pods that can be
 	// created or deleted in a single sync call. Exported for tests.
-	MaxPodCreateDeletePerSync = 500
+	MaxPodCreateDeletePerSync = 100000
 )
 
 // Controller ensures that all Job objects have corresponding pods to

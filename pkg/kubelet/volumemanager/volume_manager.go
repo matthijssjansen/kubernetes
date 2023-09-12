@@ -55,11 +55,11 @@ import (
 const (
 	// reconcilerLoopSleepPeriod is the amount of time the reconciler loop waits
 	// between successive executions
-	reconcilerLoopSleepPeriod = 100 * time.Millisecond
+	reconcilerLoopSleepPeriod = 10 * time.Millisecond
 
 	// desiredStateOfWorldPopulatorLoopSleepPeriod is the amount of time the
 	// DesiredStateOfWorldPopulator loop waits between successive executions
-	desiredStateOfWorldPopulatorLoopSleepPeriod = 100 * time.Millisecond
+	desiredStateOfWorldPopulatorLoopSleepPeriod = 10 * time.Millisecond
 
 	// podAttachAndMountTimeout is the maximum amount of time the
 	// WaitForAttachAndMount call will wait for all volumes in the specified pod
@@ -74,7 +74,7 @@ const (
 
 	// podAttachAndMountRetryInterval is the amount of time the GetVolumesForPod
 	// call waits before retrying
-	podAttachAndMountRetryInterval = 300 * time.Millisecond
+	podAttachAndMountRetryInterval = 30 * time.Millisecond
 
 	// waitForAttachTimeout is the maximum amount of time a
 	// operationexecutor.Mount call will wait for a volume to be attached.
@@ -399,15 +399,21 @@ func (vm *volumeManager) WaitForAttachAndMount(pod *v1.Pod) error {
 	klog.V(3).InfoS("Waiting for volumes to attach and mount for pod", "pod", klog.KObj(pod))
 	uniquePodName := util.GetUniquePodName(pod)
 
+	klog.Infof("%s [CONTINUUM] 0557 before reprocess world state pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	// Some pods expect to have Setup called over and over again to update.
 	// Remount plugins for which this is true. (Atomically updating volumes,
 	// like Downward API, depend on this to update the contents of the volume).
 	vm.desiredStateOfWorldPopulator.ReprocessPod(uniquePodName)
 
+	klog.Infof("%s [CONTINUUM] 0558 before volume poll pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	err := wait.PollImmediate(
 		podAttachAndMountRetryInterval,
 		podAttachAndMountTimeout,
 		vm.verifyVolumesMountedFunc(uniquePodName, expectedVolumes))
+
+	klog.Infof("%s [CONTINUUM] 0559 after volume poll pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 
 	if err != nil {
 		unmountedVolumes :=
