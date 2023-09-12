@@ -156,7 +156,7 @@ const (
 
 	// Capacity of the channel for receiving pod lifecycle events. This number
 	// is a bit arbitrary and may be adjusted in the future.
-	plegChannelCapacity = 1000
+	plegChannelCapacity = 100000
 
 	// Generic PLEG relies on relisting for discovering container events.
 	// A longer period means that kubelet will take longer to detect container
@@ -1823,6 +1823,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 		return false, err
 	}
 
+	klog.Infof("%s [CONTINUUM] 0555 Mount volumes pod=%s", time.Now().UnixNano(), klog.KObj(pod))
+
 	// Volume manager will not mount volumes for terminating pods
 	// TODO: once context cancellation is added this check can be removed
 	if !kl.podWorkers.IsPodTerminationRequested(pod.UID) {
@@ -1833,6 +1835,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 			return false, err
 		}
 	}
+
+	klog.Infof("%s [CONTINUUM] 0556 Pull secrets and probe pod=%s", time.Now().UnixNano(), klog.KObj(pod))
 
 	// Fetch the pull secrets for the pod
 	pullSecrets := kl.getPullSecretsForPod(pod)

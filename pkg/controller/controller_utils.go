@@ -83,7 +83,7 @@ const (
 	//      min(N,SlowStartInitialBatchSize)
 	// The number of batches is given by:
 	//      1+floor(log_2(ceil(N/SlowStartInitialBatchSize)))
-	SlowStartInitialBatchSize = 1
+	SlowStartInitialBatchSize = 100000
 )
 
 var UpdateTaintBackoff = wait.Backoff{

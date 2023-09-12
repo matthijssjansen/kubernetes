@@ -91,7 +91,7 @@ type TimerConfig struct {
 // DefaultTimerConfig is the default configuration of Attach/Detach controller
 // timers.
 var DefaultTimerConfig TimerConfig = TimerConfig{
-	ReconcilerLoopPeriod:                              100 * time.Millisecond,
+	ReconcilerLoopPeriod:                              10 * time.Millisecond,
 	ReconcilerMaxWaitForUnmountDuration:               6 * time.Minute,
 	DesiredStateOfWorldPopulatorLoopSleepPeriod:       1 * time.Minute,
 	DesiredStateOfWorldPopulatorListPodsRetryDuration: 3 * time.Minute,
