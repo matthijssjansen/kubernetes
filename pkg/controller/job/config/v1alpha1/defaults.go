@@ -31,6 +31,6 @@ import (
 // run it in your wrapper struct of this type in its `SetDefaults_` method.
 func RecommendedDefaultJobControllerConfiguration(obj *kubectrlmgrconfigv1alpha1.JobControllerConfiguration) {
 	if obj.ConcurrentJobSyncs == 0 {
-		obj.ConcurrentJobSyncs = 50
+		obj.ConcurrentJobSyncs = 5
 	}
 }
