@@ -55,11 +55,11 @@ import (
 const (
 	// reconcilerLoopSleepPeriod is the amount of time the reconciler loop waits
 	// between successive executions
-	reconcilerLoopSleepPeriod = 10 * time.Millisecond
+	reconcilerLoopSleepPeriod = 100 * time.Millisecond
 
 	// desiredStateOfWorldPopulatorLoopSleepPeriod is the amount of time the
 	// DesiredStateOfWorldPopulator loop waits between successive executions
-	desiredStateOfWorldPopulatorLoopSleepPeriod = 10 * time.Millisecond
+	desiredStateOfWorldPopulatorLoopSleepPeriod = 100 * time.Millisecond
 
 	// podAttachAndMountTimeout is the maximum amount of time the
 	// WaitForAttachAndMount call will wait for all volumes in the specified pod
@@ -74,7 +74,7 @@ const (
 
 	// podAttachAndMountRetryInterval is the amount of time the GetVolumesForPod
 	// call waits before retrying
-	podAttachAndMountRetryInterval = 30 * time.Millisecond
+	podAttachAndMountRetryInterval = 300 * time.Millisecond
 
 	// waitForAttachTimeout is the maximum amount of time a
 	// operationexecutor.Mount call will wait for a volume to be attached.
